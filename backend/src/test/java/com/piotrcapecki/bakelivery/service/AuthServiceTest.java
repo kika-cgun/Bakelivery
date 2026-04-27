@@ -13,10 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +38,7 @@ class AuthServiceTest {
         RegisterRequest request = new RegisterRequest("user@test.com", "password123");
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hashedPw");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(jwtUtil.generateToken("user@test.com")).thenReturn("jwt-token");
 
         AuthResponse response = authService.register(request);
@@ -92,5 +94,27 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("user@test.com", "wrongpass")))
                 .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void loadUserByUsername_returnsUserForKnownEmail() {
+        User user = User.builder()
+                .email("user@test.com")
+                .passwordHash("hashedPw")
+                .role(Role.USER)
+                .build();
+        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
+
+        UserDetails result = authService.loadUserByUsername("user@test.com");
+
+        assertThat(result.getUsername()).isEqualTo("user@test.com");
+    }
+
+    @Test
+    void loadUserByUsername_throwsForUnknownEmail() {
+        when(userRepository.findByEmail("unknown@test.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.loadUserByUsername("unknown@test.com"))
+                .isInstanceOf(UsernameNotFoundException.class);
     }
 }

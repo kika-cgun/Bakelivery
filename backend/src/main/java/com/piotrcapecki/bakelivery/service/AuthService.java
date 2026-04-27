@@ -38,8 +38,8 @@ public class AuthService implements UserDetailsService {
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
                 .build();
-        userRepository.save(user);
-        return new AuthResponse(jwtUtil.generateToken(user.getEmail()), user.getEmail());
+        User saved = userRepository.save(user);
+        return new AuthResponse(jwtUtil.generateToken(saved.getEmail()), saved.getEmail());
     }
 
     public AuthResponse login(LoginRequest request) {
