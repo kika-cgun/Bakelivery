@@ -6,12 +6,12 @@ import com.piotrcapecki.bakelivery.dto.AuthResponse;
 import com.piotrcapecki.bakelivery.dto.LoginRequest;
 import com.piotrcapecki.bakelivery.dto.RegisterRequest;
 import com.piotrcapecki.bakelivery.service.AuthService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -24,28 +24,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
 @Import(AppConfig.class)
 class AuthControllerTest {
 
+    @Autowired private WebApplicationContext webApplicationContext;
+    @Autowired private ObjectMapper objectMapper;
+    @MockitoBean private AuthService authService;
+
     private MockMvc mockMvc;
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private AuthService authService;
-
-    private void setupMockMvc() {
+    @BeforeEach
+    void setup() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
     @Test
     void login_returns200WithToken() throws Exception {
-        setupMockMvc();
         when(authService.login(any(LoginRequest.class)))
                 .thenReturn(new AuthResponse("jwt-token", "user@test.com"));
 
@@ -59,7 +53,6 @@ class AuthControllerTest {
 
     @Test
     void register_returns200WithToken() throws Exception {
-        setupMockMvc();
         when(authService.register(any(RegisterRequest.class)))
                 .thenReturn(new AuthResponse("jwt-token", "newuser@test.com"));
 
@@ -73,7 +66,6 @@ class AuthControllerTest {
 
     @Test
     void login_returns400ForBlankFields() throws Exception {
-        setupMockMvc();
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"\",\"password\":\"\"}"))
