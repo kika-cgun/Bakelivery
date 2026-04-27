@@ -1,0 +1,111 @@
+# ──────────────────────────────────────────
+#  Claude / AI tools
+# ──────────────────────────────────────────
+.claude/
+.superpowers/
+.cursor/
+.aider*
+.codeium/
+.copilot/
+
+# ──────────────────────────────────────────
+#  Environment & secrets
+# ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# ──────────────────────────────────────────
+#  macOS
+# ──────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+*.AppleDouble
+*.LSOverride
+Icon
+
+# ──────────────────────────────────────────
+#  Java / Spring Boot / Gradle
+# ──────────────────────────────────────────
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.log
+*.logs/
+hs_err_pid*
+replay_pid*
+
+.gradle/
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ──────────────────────────────────────────
+#  Maven
+# ──────────────────────────────────────────
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+
+# ──────────────────────────────────────────
+#  IDEs
+# ──────────────────────────────────────────
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# Eclipse
+.classpath
+.project
+.settings/
+.factorypath
+
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ──────────────────────────────────────────
+#  Node / frontend
+# ──────────────────────────────────────────
+node_modules/
+dist/
+.next/
+.nuxt/
+.output/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# ──────────────────────────────────────────
+#  Tymczasowe śmieci
+# ──────────────────────────────────────────
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+Thumbs.db
