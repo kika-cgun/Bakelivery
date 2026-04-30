@@ -1,12 +1,13 @@
-package com.piotrcapecki.bakelivery.service;
+package com.piotrcapecki.bakelivery.auth.service;
 
-import com.piotrcapecki.bakelivery.config.JwtUtil;
-import com.piotrcapecki.bakelivery.dto.AuthResponse;
-import com.piotrcapecki.bakelivery.dto.LoginRequest;
-import com.piotrcapecki.bakelivery.dto.RegisterRequest;
-import com.piotrcapecki.bakelivery.model.Role;
-import com.piotrcapecki.bakelivery.model.User;
-import com.piotrcapecki.bakelivery.repository.UserRepository;
+import com.piotrcapecki.bakelivery.auth.dto.AuthResponse;
+import com.piotrcapecki.bakelivery.auth.dto.LoginRequest;
+import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
+import com.piotrcapecki.bakelivery.auth.model.Role;
+import com.piotrcapecki.bakelivery.auth.model.User;
+import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
+import com.piotrcapecki.bakelivery.common.jwt.JwtClaims;
+import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,7 +40,12 @@ public class AuthService implements UserDetailsService {
                 .role(Role.USER)
                 .build();
         User saved = userRepository.save(user);
-        return new AuthResponse(jwtUtil.generateToken(saved.getEmail()), saved.getEmail());
+        return new AuthResponse(jwtUtil.generateAccessToken(new JwtClaims(
+                saved.getEmail(),
+                saved.getId(),
+                null,
+                saved.getRole().name()
+        )), saved.getEmail());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -48,6 +54,11 @@ public class AuthService implements UserDetailsService {
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
-        return new AuthResponse(jwtUtil.generateToken(user.getEmail()), user.getEmail());
+        return new AuthResponse(jwtUtil.generateAccessToken(new JwtClaims(
+                user.getEmail(),
+                user.getId(),
+                null,
+                user.getRole().name()
+        )), user.getEmail());
     }
 }

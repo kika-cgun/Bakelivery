@@ -1,8 +1,8 @@
-package com.piotrcapecki.bakelivery.config;
+package com.piotrcapecki.bakelivery.auth.config;
 
-import com.piotrcapecki.bakelivery.dto.RegisterRequest;
-import com.piotrcapecki.bakelivery.repository.UserRepository;
-import com.piotrcapecki.bakelivery.service.AuthService;
+import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
+import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
+import com.piotrcapecki.bakelivery.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

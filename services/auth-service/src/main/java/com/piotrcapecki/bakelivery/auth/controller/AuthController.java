@@ -1,9 +1,9 @@
-package com.piotrcapecki.bakelivery.controller;
+package com.piotrcapecki.bakelivery.auth.controller;
 
-import com.piotrcapecki.bakelivery.dto.AuthResponse;
-import com.piotrcapecki.bakelivery.dto.LoginRequest;
-import com.piotrcapecki.bakelivery.dto.RegisterRequest;
-import com.piotrcapecki.bakelivery.service.AuthService;
+import com.piotrcapecki.bakelivery.auth.dto.AuthResponse;
+import com.piotrcapecki.bakelivery.auth.dto.LoginRequest;
+import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
+import com.piotrcapecki.bakelivery.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

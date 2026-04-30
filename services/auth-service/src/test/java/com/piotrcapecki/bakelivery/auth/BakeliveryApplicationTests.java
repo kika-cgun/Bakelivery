@@ -1,4 +1,4 @@
-package com.piotrcapecki.bakelivery;
+package com.piotrcapecki.bakelivery.auth;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

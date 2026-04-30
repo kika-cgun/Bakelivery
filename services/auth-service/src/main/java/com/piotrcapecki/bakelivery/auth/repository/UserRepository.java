@@ -1,6 +1,6 @@
-package com.piotrcapecki.bakelivery.repository;
+package com.piotrcapecki.bakelivery.auth.repository;
 
-import com.piotrcapecki.bakelivery.model.User;
+import com.piotrcapecki.bakelivery.auth.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

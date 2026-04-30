@@ -1,6 +1,8 @@
-package com.piotrcapecki.bakelivery.config;
+package com.piotrcapecki.bakelivery.auth.config;
 
-import com.piotrcapecki.bakelivery.service.AuthService;
+import com.piotrcapecki.bakelivery.common.jwt.JwtClaims;
+import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
+import com.piotrcapecki.bakelivery.auth.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,10 +35,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         String token = authHeader.substring(7);
         try {
-            String email = jwtUtil.extractEmail(token);
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = authService.loadUserByUsername(email);
-                if (jwtUtil.isTokenValid(token, email)) {
+            JwtClaims claims = jwtUtil.parse(token);
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = authService.loadUserByUsername(claims.email());
+                if (userDetails.getUsername().equals(claims.email())) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -1,14 +1,22 @@
 spring:
   application:
-    name: bakelivery
+    name: auth-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/bakelivery
-    username: postgres
-    password: postgres
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bakelivery_auth}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: 8081
 
 jwt:
   secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
+  access-ttl-millis: ${JWT_ACCESS_TTL:900000}
+  refresh-ttl-millis: ${JWT_REFRESH_TTL:2592000000}

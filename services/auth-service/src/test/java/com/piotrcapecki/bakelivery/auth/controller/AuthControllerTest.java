@@ -1,11 +1,11 @@
-package com.piotrcapecki.bakelivery.controller;
+package com.piotrcapecki.bakelivery.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.piotrcapecki.bakelivery.config.AppConfig;
-import com.piotrcapecki.bakelivery.dto.AuthResponse;
-import com.piotrcapecki.bakelivery.dto.LoginRequest;
-import com.piotrcapecki.bakelivery.dto.RegisterRequest;
-import com.piotrcapecki.bakelivery.service.AuthService;
+import com.piotrcapecki.bakelivery.auth.config.AppConfig;
+import com.piotrcapecki.bakelivery.auth.dto.AuthResponse;
+import com.piotrcapecki.bakelivery.auth.dto.LoginRequest;
+import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
+import com.piotrcapecki.bakelivery.auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +20,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -37,7 +40,9 @@ class AuthControllerTest {
 
     @BeforeEach
     void setup() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
     }
 
     @Test
@@ -72,5 +77,11 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"\",\"password\":\"\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void me_rejectsUnauthenticatedRequests() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(401, 403));
     }
 }

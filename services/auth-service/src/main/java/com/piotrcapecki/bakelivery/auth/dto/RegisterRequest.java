@@ -1,4 +1,4 @@
-package com.piotrcapecki.bakelivery.dto;
+package com.piotrcapecki.bakelivery.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
