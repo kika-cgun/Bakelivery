@@ -16,6 +16,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService implements UserDetailsService {
@@ -37,13 +39,13 @@ public class AuthService implements UserDetailsService {
         User user = User.builder()
                 .email(request.email())
                 .passwordHash(passwordEncoder.encode(request.password()))
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .build();
         User saved = userRepository.save(user);
         return new AuthResponse(jwtUtil.generateAccessToken(new JwtClaims(
                 saved.getEmail(),
                 saved.getId(),
-                null,
+                bakeryId(saved),
                 saved.getRole().name()
         )), saved.getEmail());
     }
@@ -57,8 +59,12 @@ public class AuthService implements UserDetailsService {
         return new AuthResponse(jwtUtil.generateAccessToken(new JwtClaims(
                 user.getEmail(),
                 user.getId(),
-                null,
+                bakeryId(user),
                 user.getRole().name()
         )), user.getEmail());
+    }
+
+    private UUID bakeryId(User user) {
+        return user.getBakery() == null ? null : user.getBakery().getId();
     }
 }

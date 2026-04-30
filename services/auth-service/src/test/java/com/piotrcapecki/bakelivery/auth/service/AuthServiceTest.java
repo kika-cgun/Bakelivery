@@ -3,6 +3,7 @@ package com.piotrcapecki.bakelivery.auth.service;
 import com.piotrcapecki.bakelivery.auth.dto.AuthResponse;
 import com.piotrcapecki.bakelivery.auth.dto.LoginRequest;
 import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
+import com.piotrcapecki.bakelivery.auth.model.Bakery;
 import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
@@ -47,7 +48,7 @@ class AuthServiceTest {
                 .id(userId)
                 .email("user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .build());
         when(jwtUtil.generateAccessToken(any(JwtClaims.class))).thenReturn("jwt-token");
 
@@ -55,10 +56,12 @@ class AuthServiceTest {
 
         assertThat(response.token()).isEqualTo("jwt-token");
         assertThat(response.email()).isEqualTo("user@test.com");
-        verify(userRepository).save(any(User.class));
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getRole()).isEqualTo(Role.CUSTOMER);
         ArgumentCaptor<JwtClaims> claimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
         verify(jwtUtil).generateAccessToken(claimsCaptor.capture());
-        assertThat(claimsCaptor.getValue()).isEqualTo(new JwtClaims("user@test.com", userId, null, "USER"));
+        assertThat(claimsCaptor.getValue()).isEqualTo(new JwtClaims("user@test.com", userId, null, "CUSTOMER"));
     }
 
     @Test
@@ -71,13 +74,13 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_returnsTokenForValidCredentials() {
+    void login_keepsBakeryIdNullForSuperAdmin() {
         UUID userId = UUID.randomUUID();
         User user = User.builder()
                 .id(userId)
                 .email("user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.SUPER_ADMIN)
                 .build();
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "hashedPw")).thenReturn(true);
@@ -85,13 +88,41 @@ class AuthServiceTest {
                 claims.email().equals("user@test.com")
                         && claims.userId().equals(userId)
                         && claims.bakeryId() == null
-                        && claims.role().equals("USER")
+                        && claims.role().equals("SUPER_ADMIN")
         ))).thenReturn("jwt-token");
 
         AuthResponse response = authService.login(new LoginRequest("user@test.com", "password123"));
 
         assertThat(response.token()).isEqualTo("jwt-token");
         assertThat(response.email()).isEqualTo("user@test.com");
+    }
+
+    @Test
+    void login_includesBakeryIdForTenantUser() {
+        UUID userId = UUID.randomUUID();
+        UUID bakeryId = UUID.randomUUID();
+        User user = User.builder()
+                .id(userId)
+                .email("admin@test.com")
+                .passwordHash("hashedPw")
+                .role(Role.BAKERY_ADMIN)
+                .bakery(Bakery.builder()
+                        .id(bakeryId)
+                        .name("Tenant Bakery")
+                        .slug("tenant-bakery")
+                        .build())
+                .build();
+        when(userRepository.findByEmail("admin@test.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "hashedPw")).thenReturn(true);
+        when(jwtUtil.generateAccessToken(any(JwtClaims.class))).thenReturn("jwt-token");
+
+        AuthResponse response = authService.login(new LoginRequest("admin@test.com", "password123"));
+
+        assertThat(response.token()).isEqualTo("jwt-token");
+        ArgumentCaptor<JwtClaims> claimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
+        verify(jwtUtil).generateAccessToken(claimsCaptor.capture());
+        assertThat(claimsCaptor.getValue())
+                .isEqualTo(new JwtClaims("admin@test.com", userId, bakeryId, "BAKERY_ADMIN"));
     }
 
     @Test
@@ -107,7 +138,7 @@ class AuthServiceTest {
         User user = User.builder()
                 .email("user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .build();
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongpass", "hashedPw")).thenReturn(false);
@@ -121,7 +152,7 @@ class AuthServiceTest {
         User user = User.builder()
                 .email("user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .build();
         when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
 

@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -72,6 +73,12 @@ class AuthControllerTest {
     }
 
     @Test
+    void refresh_requiresAuthenticationUntilImplemented() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(401, 403));
+    }
+
+    @Test
     void login_returns400ForBlankFields() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -83,5 +90,26 @@ class AuthControllerTest {
     void me_rejectsUnauthenticatedRequests() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(401, 403));
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void platformAdmin_rejectsCustomerRole() throws Exception {
+        mockMvc.perform(get("/api/admin/platform/probe"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "SUPER_ADMIN")
+    void platformAdmin_allowsSuperAdminRole() throws Exception {
+        mockMvc.perform(get("/api/admin/platform/probe"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "BAKERY_ADMIN")
+    void usersAdmin_allowsBakeryAdminRole() throws Exception {
+        mockMvc.perform(get("/api/admin/users/probe"))
+                .andExpect(status().isNotFound());
     }
 }

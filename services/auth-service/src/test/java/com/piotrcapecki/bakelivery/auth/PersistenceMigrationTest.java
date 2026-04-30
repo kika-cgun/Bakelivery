@@ -51,7 +51,7 @@ class PersistenceMigrationTest {
         User user = User.builder()
                 .email("migration-user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .build();
 
         User saved = userRepository.saveAndFlush(user);
@@ -59,7 +59,7 @@ class PersistenceMigrationTest {
         User loaded = userRepository.findById(saved.getId()).orElseThrow();
         assertThat(loaded.getEmail()).isEqualTo("migration-user@test.com");
         assertThat(loaded.getPasswordHash()).isEqualTo("hashedPw");
-        assertThat(loaded.getRole()).isEqualTo(Role.USER);
+        assertThat(loaded.getRole()).isEqualTo(Role.CUSTOMER);
         assertThat(loaded.getCreatedAt()).isNotNull();
         assertThat(loaded.getUpdatedAt()).isNotNull();
     }
@@ -112,7 +112,7 @@ class PersistenceMigrationTest {
         User user = User.builder()
                 .email("bakery-user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .bakery(bakery)
                 .build();
 

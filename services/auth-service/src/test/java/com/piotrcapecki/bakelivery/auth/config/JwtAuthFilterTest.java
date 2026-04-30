@@ -47,12 +47,12 @@ class JwtAuthFilterTest {
     @Test
     void doFilter_authenticatesWhenTokenClaimsMatchLoadedUser() throws Exception {
         UUID userId = UUID.randomUUID();
-        JwtClaims claims = new JwtClaims("user@test.com", userId, null, "USER");
+        JwtClaims claims = new JwtClaims("user@test.com", userId, null, "CUSTOMER");
         User user = User.builder()
                 .id(userId)
                 .email("user@test.com")
                 .passwordHash("hashedPw")
-                .role(Role.USER)
+                .role(Role.CUSTOMER)
                 .build();
         when(jwtUtil.parse("valid-token")).thenReturn(claims);
         when(authService.loadUserByUsername("user@test.com")).thenReturn(user);
@@ -87,11 +87,11 @@ class JwtAuthFilterTest {
     @Test
     void doFilter_doesNotAuthenticateWhenLoadedUsernameDiffersFromClaims() throws Exception {
         UUID userId = UUID.randomUUID();
-        JwtClaims claims = new JwtClaims("user@test.com", userId, null, "USER");
+        JwtClaims claims = new JwtClaims("user@test.com", userId, null, "CUSTOMER");
         UserDetails user = org.springframework.security.core.userdetails.User
                 .withUsername("other@test.com")
                 .password("hashedPw")
-                .roles("USER")
+                .roles("CUSTOMER")
                 .build();
         when(jwtUtil.parse("valid-token")).thenReturn(claims);
         when(authService.loadUserByUsername("user@test.com")).thenReturn(user);
