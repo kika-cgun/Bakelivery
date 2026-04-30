@@ -1,9 +1,11 @@
 package com.piotrcapecki.bakelivery.auth;
 
 import com.piotrcapecki.bakelivery.auth.model.Bakery;
+import com.piotrcapecki.bakelivery.auth.model.RefreshToken;
 import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.repository.BakeryRepository;
+import com.piotrcapecki.bakelivery.auth.repository.RefreshTokenRepository;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,6 +46,9 @@ class PersistenceMigrationTest {
 
     @Autowired
     private BakeryRepository bakeryRepository;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -124,5 +131,36 @@ class PersistenceMigrationTest {
         assertThat(loaded.getBakery()).isNotNull();
         assertThat(loaded.getBakery().getId()).isEqualTo(bakery.getId());
         assertThat(loaded.getBakery().getSlug()).isEqualTo("relation-bakery");
+    }
+
+    @Test
+    @Transactional
+    void refreshTokenCanBePersistedAndRevokedByUser() {
+        User user = userRepository.saveAndFlush(User.builder()
+                .email("refresh-user@test.com")
+                .passwordHash("hashedPw")
+                .role(Role.CUSTOMER)
+                .build());
+        RefreshToken token = RefreshToken.builder()
+                .userId(user.getId())
+                .tokenHash("hashed-refresh-token")
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .revoked(false)
+                .build();
+
+        RefreshToken saved = refreshTokenRepository.saveAndFlush(token);
+        entityManager.flush();
+        entityManager.clear();
+
+        RefreshToken loaded = refreshTokenRepository.findByTokenHashAndRevokedFalse("hashed-refresh-token").orElseThrow();
+        assertThat(loaded.getId()).isEqualTo(saved.getId());
+        assertThat(loaded.getUserId()).isEqualTo(user.getId());
+        assertThat(loaded.getCreatedAt()).isNotNull();
+
+        refreshTokenRepository.revokeAllForUser(user.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(refreshTokenRepository.findByTokenHashAndRevokedFalse("hashed-refresh-token")).isEmpty();
     }
 }

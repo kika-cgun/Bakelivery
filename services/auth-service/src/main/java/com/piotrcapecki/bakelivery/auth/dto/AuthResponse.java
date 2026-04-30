@@ -1,3 +1,8 @@
 package com.piotrcapecki.bakelivery.auth.dto;
 
-public record AuthResponse(String token, String email) {}
+public record AuthResponse(
+        String accessToken,
+        String refreshToken,
+        String email,
+        String role
+) {}

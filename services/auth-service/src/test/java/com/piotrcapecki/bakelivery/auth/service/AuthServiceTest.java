@@ -36,6 +36,7 @@ class AuthServiceTest {
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtUtil jwtUtil;
+    @Mock RefreshTokenService refreshTokenService;
     @InjectMocks AuthService authService;
 
     @Test
@@ -51,17 +52,21 @@ class AuthServiceTest {
                 .role(Role.CUSTOMER)
                 .build());
         when(jwtUtil.generateAccessToken(any(JwtClaims.class))).thenReturn("jwt-token");
+        when(refreshTokenService.issue(userId)).thenReturn("refresh-token");
 
         AuthResponse response = authService.register(request);
 
-        assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.accessToken()).isEqualTo("jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
         assertThat(response.email()).isEqualTo("user@test.com");
+        assertThat(response.role()).isEqualTo("CUSTOMER");
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getRole()).isEqualTo(Role.CUSTOMER);
         ArgumentCaptor<JwtClaims> claimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
         verify(jwtUtil).generateAccessToken(claimsCaptor.capture());
         assertThat(claimsCaptor.getValue()).isEqualTo(new JwtClaims("user@test.com", userId, null, "CUSTOMER"));
+        verify(refreshTokenService).issue(userId);
     }
 
     @Test
@@ -90,11 +95,14 @@ class AuthServiceTest {
                         && claims.bakeryId() == null
                         && claims.role().equals("SUPER_ADMIN")
         ))).thenReturn("jwt-token");
+        when(refreshTokenService.issue(userId)).thenReturn("refresh-token");
 
         AuthResponse response = authService.login(new LoginRequest("user@test.com", "password123"));
 
-        assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.accessToken()).isEqualTo("jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
         assertThat(response.email()).isEqualTo("user@test.com");
+        assertThat(response.role()).isEqualTo("SUPER_ADMIN");
     }
 
     @Test
@@ -115,14 +123,70 @@ class AuthServiceTest {
         when(userRepository.findByEmail("admin@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "hashedPw")).thenReturn(true);
         when(jwtUtil.generateAccessToken(any(JwtClaims.class))).thenReturn("jwt-token");
+        when(refreshTokenService.issue(userId)).thenReturn("refresh-token");
 
         AuthResponse response = authService.login(new LoginRequest("admin@test.com", "password123"));
 
-        assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.accessToken()).isEqualTo("jwt-token");
+        assertThat(response.refreshToken()).isEqualTo("refresh-token");
+        assertThat(response.role()).isEqualTo("BAKERY_ADMIN");
         ArgumentCaptor<JwtClaims> claimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
         verify(jwtUtil).generateAccessToken(claimsCaptor.capture());
         assertThat(claimsCaptor.getValue())
                 .isEqualTo(new JwtClaims("admin@test.com", userId, bakeryId, "BAKERY_ADMIN"));
+    }
+
+    @Test
+    void refresh_rotatesRefreshTokenAndReturnsCurrentUserClaims() {
+        UUID userId = UUID.randomUUID();
+        UUID bakeryId = UUID.randomUUID();
+        User user = User.builder()
+                .id(userId)
+                .email("admin@test.com")
+                .passwordHash("hashedPw")
+                .role(Role.BAKERY_ADMIN)
+                .bakery(Bakery.builder()
+                        .id(bakeryId)
+                        .name("Tenant Bakery")
+                        .slug("tenant-bakery")
+                        .build())
+                .build();
+        when(refreshTokenService.verifyAndRotate("old-refresh-token"))
+                .thenReturn(new RefreshTokenService.RotateResult(userId, "new-refresh-token"));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(jwtUtil.generateAccessToken(any(JwtClaims.class))).thenReturn("new-access-token");
+
+        AuthResponse response = authService.refresh("old-refresh-token");
+
+        assertThat(response.accessToken()).isEqualTo("new-access-token");
+        assertThat(response.refreshToken()).isEqualTo("new-refresh-token");
+        assertThat(response.email()).isEqualTo("admin@test.com");
+        assertThat(response.role()).isEqualTo("BAKERY_ADMIN");
+        ArgumentCaptor<JwtClaims> claimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
+        verify(jwtUtil).generateAccessToken(claimsCaptor.capture());
+        assertThat(claimsCaptor.getValue())
+                .isEqualTo(new JwtClaims("admin@test.com", userId, bakeryId, "BAKERY_ADMIN"));
+    }
+
+    @Test
+    void refresh_throwsWhenRotatedUserNoLongerExists() {
+        UUID userId = UUID.randomUUID();
+        when(refreshTokenService.verifyAndRotate("old-refresh-token"))
+                .thenReturn(new RefreshTokenService.RotateResult(userId, "new-refresh-token"));
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.refresh("old-refresh-token"))
+                .isInstanceOf(UsernameNotFoundException.class)
+                .hasMessageContaining(userId.toString());
+    }
+
+    @Test
+    void logout_revokesAllRefreshTokensForUser() {
+        UUID userId = UUID.randomUUID();
+
+        authService.logout(userId);
+
+        verify(refreshTokenService).revokeAllForUser(userId);
     }
 
     @Test

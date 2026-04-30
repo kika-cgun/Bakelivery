@@ -25,6 +25,7 @@ public class AuthService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -42,12 +43,7 @@ public class AuthService implements UserDetailsService {
                 .role(Role.CUSTOMER)
                 .build();
         User saved = userRepository.save(user);
-        return new AuthResponse(jwtUtil.generateAccessToken(new JwtClaims(
-                saved.getEmail(),
-                saved.getId(),
-                bakeryId(saved),
-                saved.getRole().name()
-        )), saved.getEmail());
+        return buildResponse(saved);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -56,12 +52,41 @@ public class AuthService implements UserDetailsService {
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
-        return new AuthResponse(jwtUtil.generateAccessToken(new JwtClaims(
+        return buildResponse(user);
+    }
+
+    public AuthResponse refresh(String refreshToken) {
+        RefreshTokenService.RotateResult rotated = refreshTokenService.verifyAndRotate(refreshToken);
+        User user = userRepository.findById(rotated.userId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + rotated.userId()));
+        return new AuthResponse(
+                accessToken(user),
+                rotated.newRawToken(),
+                user.getEmail(),
+                user.getRole().name()
+        );
+    }
+
+    public void logout(UUID userId) {
+        refreshTokenService.revokeAllForUser(userId);
+    }
+
+    private AuthResponse buildResponse(User user) {
+        return new AuthResponse(
+                accessToken(user),
+                refreshTokenService.issue(user.getId()),
+                user.getEmail(),
+                user.getRole().name()
+        );
+    }
+
+    private String accessToken(User user) {
+        return jwtUtil.generateAccessToken(new JwtClaims(
                 user.getEmail(),
                 user.getId(),
                 bakeryId(user),
                 user.getRole().name()
-        )), user.getEmail());
+        ));
     }
 
     private UUID bakeryId(User user) {

@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.piotrcapecki.bakelivery.auth.config.AppConfig;
 import com.piotrcapecki.bakelivery.auth.dto.AuthResponse;
 import com.piotrcapecki.bakelivery.auth.dto.LoginRequest;
+import com.piotrcapecki.bakelivery.auth.dto.RefreshRequest;
 import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
+import com.piotrcapecki.bakelivery.auth.model.Role;
+import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,13 +18,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,33 +57,70 @@ class AuthControllerTest {
     @Test
     void login_returns200WithToken() throws Exception {
         when(authService.login(any(LoginRequest.class)))
-                .thenReturn(new AuthResponse("jwt-token", "user@test.com"));
+                .thenReturn(new AuthResponse("access-token", "refresh-token", "user@test.com", "CUSTOMER"));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("user@test.com", "pass123"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.email").value("user@test.com"));
+                .andExpect(jsonPath("$.accessToken").value("access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+                .andExpect(jsonPath("$.email").value("user@test.com"))
+                .andExpect(jsonPath("$.role").value("CUSTOMER"));
     }
 
     @Test
     void register_returns200WithToken() throws Exception {
         when(authService.register(any(RegisterRequest.class)))
-                .thenReturn(new AuthResponse("jwt-token", "newuser@test.com"));
+                .thenReturn(new AuthResponse("access-token", "refresh-token", "newuser@test.com", "CUSTOMER"));
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterRequest("newuser@test.com", "password123"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.email").value("newuser@test.com"));
+                .andExpect(jsonPath("$.accessToken").value("access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+                .andExpect(jsonPath("$.email").value("newuser@test.com"))
+                .andExpect(jsonPath("$.role").value("CUSTOMER"));
     }
 
     @Test
-    void refresh_requiresAuthenticationUntilImplemented() throws Exception {
-        mockMvc.perform(post("/api/auth/refresh"))
+    void refresh_isPublicAndReturnsRotatedTokens() throws Exception {
+        when(authService.refresh("refresh-token"))
+                .thenReturn(new AuthResponse("new-access-token", "new-refresh-token", "user@test.com", "CUSTOMER"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshRequest("refresh-token"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"))
+                .andExpect(jsonPath("$.email").value("user@test.com"))
+                .andExpect(jsonPath("$.role").value("CUSTOMER"));
+    }
+
+    @Test
+    void logout_rejectsUnauthenticatedRequests() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(401, 403));
+    }
+
+    @Test
+    void logout_revokesAuthenticatedUsersTokens() throws Exception {
+        UUID userId = UUID.randomUUID();
+        User user = User.builder()
+                .id(userId)
+                .email("user@test.com")
+                .passwordHash("hashedPw")
+                .role(Role.CUSTOMER)
+                .build();
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+        mockMvc.perform(post("/api/auth/logout").with(authentication(authentication)))
+                .andExpect(status().isNoContent());
+
+        verify(authService).logout(userId);
     }
 
     @Test
