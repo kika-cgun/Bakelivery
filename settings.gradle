@@ -1,0 +1,8 @@
+rootProject.name = 'bakelivery'
+
+include 'services:auth-service'
+project(':services:auth-service').projectDir = file('services/auth-service')
+
+// TODO odkomentować po Task 2 i 3
+// include 'libs:bakelivery-common'
+// include 'services:api-gateway'
