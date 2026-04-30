@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
@@ -97,6 +98,50 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"))
                 .andExpect(jsonPath("$.email").value("user@test.com"))
                 .andExpect(jsonPath("$.role").value("CUSTOMER"));
+    }
+
+    @Test
+    void refresh_returns401ForUnknownToken() throws Exception {
+        when(authService.refresh("unknown-refresh-token"))
+                .thenThrow(new BadCredentialsException("Invalid refresh token"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshRequest("unknown-refresh-token"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Invalid refresh token"));
+    }
+
+    @Test
+    void refresh_returns401ForExpiredToken() throws Exception {
+        when(authService.refresh("expired-refresh-token"))
+                .thenThrow(new BadCredentialsException("Expired refresh token"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshRequest("expired-refresh-token"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Expired refresh token"));
+    }
+
+    @Test
+    void refresh_returns401ForReusedToken() throws Exception {
+        when(authService.refresh("reused-refresh-token"))
+                .thenThrow(new BadCredentialsException("Invalid refresh token"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshRequest("reused-refresh-token"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Invalid refresh token"));
+    }
+
+    @Test
+    void refresh_returns400ForBlankToken() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RefreshRequest(""))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

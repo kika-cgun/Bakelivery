@@ -135,7 +135,7 @@ class PersistenceMigrationTest {
 
     @Test
     @Transactional
-    void refreshTokenCanBePersistedAndRevokedByUser() {
+    void refreshTokenCanBePersistedAndRevokedConditionally() {
         User user = userRepository.saveAndFlush(User.builder()
                 .email("refresh-user@test.com")
                 .passwordHash("hashedPw")
@@ -152,15 +152,22 @@ class PersistenceMigrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        RefreshToken loaded = refreshTokenRepository.findByTokenHashAndRevokedFalse("hashed-refresh-token").orElseThrow();
+        RefreshToken loaded = refreshTokenRepository.findByTokenHash("hashed-refresh-token").orElseThrow();
         assertThat(loaded.getId()).isEqualTo(saved.getId());
         assertThat(loaded.getUserId()).isEqualTo(user.getId());
         assertThat(loaded.getCreatedAt()).isNotNull();
+        assertThat(loaded.isRevoked()).isFalse();
 
-        refreshTokenRepository.revokeAllForUser(user.getId());
+        int revokedRows = refreshTokenRepository.revokeIfUsable("hashed-refresh-token", Instant.now());
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(refreshTokenRepository.findByTokenHashAndRevokedFalse("hashed-refresh-token")).isEmpty();
+        assertThat(revokedRows).isEqualTo(1);
+        RefreshToken revoked = refreshTokenRepository.findByTokenHash("hashed-refresh-token").orElseThrow();
+        assertThat(revoked.isRevoked()).isTrue();
+
+        int reusedRows = refreshTokenRepository.revokeIfUsable("hashed-refresh-token", Instant.now());
+
+        assertThat(reusedRows).isZero();
     }
 }

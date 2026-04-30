@@ -7,19 +7,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,11 +57,11 @@ class RefreshTokenServiceTest {
     @Test
     void verifyAndRotateRejectsUnknownToken() {
         RefreshTokenService service = new RefreshTokenService(refreshTokenRepository, 60_000);
-        when(refreshTokenRepository.findByTokenHashAndRevokedFalse(hash("unknown-token")))
+        when(refreshTokenRepository.findByTokenHash(hash("unknown-token")))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.verifyAndRotate("unknown-token"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("Invalid refresh token");
     }
 
@@ -74,12 +75,13 @@ class RefreshTokenServiceTest {
                 .revoked(false)
                 .build();
         RefreshTokenService service = new RefreshTokenService(refreshTokenRepository, 60_000);
-        when(refreshTokenRepository.findByTokenHashAndRevokedFalse(hash(rawToken)))
+        when(refreshTokenRepository.findByTokenHash(hash(rawToken)))
                 .thenReturn(Optional.of(expired));
 
         assertThatThrownBy(() -> service.verifyAndRotate(rawToken))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("Expired refresh token");
+        verify(refreshTokenRepository, never()).revokeIfUsable(any(String.class), any(Instant.class));
         verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
     }
 
@@ -94,23 +96,45 @@ class RefreshTokenServiceTest {
                 .revoked(false)
                 .build();
         RefreshTokenService service = new RefreshTokenService(refreshTokenRepository, 60_000);
-        when(refreshTokenRepository.findByTokenHashAndRevokedFalse(hash(rawToken)))
+        when(refreshTokenRepository.findByTokenHash(hash(rawToken)))
                 .thenReturn(Optional.of(current));
+        when(refreshTokenRepository.revokeIfUsable(eq(hash(rawToken)), any(Instant.class)))
+                .thenReturn(1);
 
         RefreshTokenService.RotateResult result = service.verifyAndRotate(rawToken);
 
         assertThat(result.userId()).isEqualTo(userId);
         assertThat(result.newRawToken()).isNotBlank();
         assertThat(result.newRawToken()).isNotEqualTo(rawToken);
-        assertThat(current.isRevoked()).isTrue();
+        assertThat(current.isRevoked()).isFalse();
         ArgumentCaptor<RefreshToken> tokenCaptor = ArgumentCaptor.forClass(RefreshToken.class);
-        verify(refreshTokenRepository).save(current);
-        verify(refreshTokenRepository, org.mockito.Mockito.times(2)).save(tokenCaptor.capture());
-        List<RefreshToken> savedTokens = tokenCaptor.getAllValues();
-        RefreshToken replacement = savedTokens.get(1);
+        verify(refreshTokenRepository).save(tokenCaptor.capture());
+        RefreshToken replacement = tokenCaptor.getValue();
         assertThat(replacement.getUserId()).isEqualTo(userId);
         assertThat(replacement.getTokenHash()).isEqualTo(hash(result.newRawToken()));
         assertThat(replacement.isRevoked()).isFalse();
+    }
+
+    @Test
+    void verifyAndRotateRejectsTokenWhenConditionalRevokeDoesNotUpdateRow() {
+        UUID userId = UUID.randomUUID();
+        String rawToken = "already-rotated-token";
+        RefreshToken current = RefreshToken.builder()
+                .userId(userId)
+                .tokenHash(hash(rawToken))
+                .expiresAt(Instant.now().plusSeconds(60))
+                .revoked(false)
+                .build();
+        RefreshTokenService service = new RefreshTokenService(refreshTokenRepository, 60_000);
+        when(refreshTokenRepository.findByTokenHash(hash(rawToken)))
+                .thenReturn(Optional.of(current));
+        when(refreshTokenRepository.revokeIfUsable(eq(hash(rawToken)), any(Instant.class)))
+                .thenReturn(0);
+
+        assertThatThrownBy(() -> service.verifyAndRotate(rawToken))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessageContaining("Invalid refresh token");
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
     }
 
     private static String hash(String rawToken) {

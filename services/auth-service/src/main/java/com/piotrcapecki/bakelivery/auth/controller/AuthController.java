@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -37,8 +38,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(Authentication auth) {
-        User user = (User) auth.getPrincipal();
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal User user) {
         authService.logout(user.getId());
         return ResponseEntity.noContent().build();
     }

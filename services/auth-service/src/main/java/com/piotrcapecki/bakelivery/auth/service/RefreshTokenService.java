@@ -3,6 +3,7 @@ package com.piotrcapecki.bakelivery.auth.service;
 import com.piotrcapecki.bakelivery.auth.model.RefreshToken;
 import com.piotrcapecki.bakelivery.auth.repository.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,13 +48,17 @@ public class RefreshTokenService {
 
     @Transactional
     public RotateResult verifyAndRotate(String rawToken) {
-        RefreshToken current = repo.findByTokenHashAndRevokedFalse(hash(rawToken))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
-        if (!current.getExpiresAt().isAfter(Instant.now())) {
-            throw new IllegalArgumentException("Expired refresh token");
+        String tokenHash = hash(rawToken);
+        Instant now = Instant.now();
+        RefreshToken current = repo.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
+        if (!current.getExpiresAt().isAfter(now)) {
+            throw new BadCredentialsException("Expired refresh token");
         }
-        current.setRevoked(true);
-        repo.save(current);
+        int revokedRows = repo.revokeIfUsable(tokenHash, now);
+        if (revokedRows != 1) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
         String newRawToken = issue(current.getUserId());
         return new RotateResult(current.getUserId(), newRawToken);
     }

@@ -19,7 +19,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -76,6 +78,13 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.register(new RegisterRequest("user@test.com", "pass123")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("already in use");
+    }
+
+    @Test
+    void register_isTransactionalAcrossUserAndRefreshTokenCreation() throws NoSuchMethodException {
+        Method register = AuthService.class.getMethod("register", RegisterRequest.class);
+
+        assertThat(register.isAnnotationPresent(Transactional.class)).isTrue();
     }
 
     @Test
