@@ -32,6 +32,14 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void conflict_usesFallbackWhenMessageIsNull() {
+        var response = handler.conflict(new ConflictException(null));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).containsEntry("error", "Conflict");
+    }
+
+    @Test
     void bad_usesFallbackWhenMessageIsNull() {
         var response = handler.bad(new IllegalArgumentException());
 

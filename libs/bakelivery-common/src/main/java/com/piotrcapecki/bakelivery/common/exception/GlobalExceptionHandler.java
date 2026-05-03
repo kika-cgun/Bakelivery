@@ -36,6 +36,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("error", msg));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, String>> conflict(ConflictException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", messageOrFallback(e.getMessage(), "Conflict")));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> bad(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("error", messageOrFallback(e.getMessage(), "Invalid request")));
