@@ -6,6 +6,7 @@ import com.piotrcapecki.bakelivery.auth.service.UserManagementService;
 import com.piotrcapecki.bakelivery.common.exception.ForbiddenException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,7 +48,7 @@ public class UserManagementController {
             throw new ForbiddenException("Cross-bakery operations not allowed via this endpoint");
         }
         User created = service.createEmployee(bakeryId, req);
-        return ResponseEntity.status(201).body(new UserSummary(created.getId(), created.getEmail(), created.getRole().name()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new UserSummary(created.getId(), created.getEmail(), created.getRole().name()));
     }
 
     public record UserSummary(UUID id, String email, String role) {}
