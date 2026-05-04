@@ -5,8 +5,11 @@ import com.piotrcapecki.bakelivery.auth.dto.LoginRequest;
 import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
 import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
+import com.piotrcapecki.bakelivery.auth.model.Bakery;
+import com.piotrcapecki.bakelivery.auth.repository.BakeryRepository;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
 import com.piotrcapecki.bakelivery.common.exception.ConflictException;
+import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import com.piotrcapecki.bakelivery.common.jwt.JwtClaims;
 import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ import java.util.UUID;
 public class AuthService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final BakeryRepository bakeryRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
@@ -40,10 +44,13 @@ public class AuthService implements UserDetailsService {
         if (userRepository.existsByEmail(request.email())) {
             throw new ConflictException("Email already in use");
         }
+        Bakery bakery = bakeryRepository.findBySlug(request.bakerySlug())
+                .orElseThrow(() -> new NotFoundException("Bakery not found: " + request.bakerySlug()));
         User user = User.builder()
                 .email(request.email())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .role(Role.CUSTOMER)
+                .bakery(bakery)
                 .build();
         User saved = userRepository.save(user);
         return buildResponse(saved);
