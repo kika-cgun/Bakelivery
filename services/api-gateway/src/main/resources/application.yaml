@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+gateway:
+  routes:
+    auth-service:
+      uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+
+jwt:
+  secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
+  access-ttl-millis: ${JWT_ACCESS_TTL:900000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

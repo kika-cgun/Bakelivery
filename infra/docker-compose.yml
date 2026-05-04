@@ -1,0 +1,61 @@
+services:
+  postgres-auth:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bakelivery_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5433:5432"]
+    volumes: ["pg-auth-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bakelivery_auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  auth-service:
+    build:
+      context: ../services/auth-service
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres-auth:5432/bakelivery_auth
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+    ports: ["8081:8081"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api-gateway:
+    build:
+      context: ../services/api-gateway
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+      AUTH_SERVICE_URL: http://auth-service:8081
+    ports: ["8080:8080"]
+
+  # ─── Faza 3: MinIO ─────────────────────────────────────────────
+  # minio: ...
+
+  # ─── Faza 4: RabbitMQ + Mailpit ────────────────────────────────
+  # rabbitmq: ...
+  # mailpit: ...
+
+  # ─── Faza 5: Redis ─────────────────────────────────────────────
+  # redis: ...
+
+volumes:
+  pg-auth-data:
+  # minio-data:
+  # rabbitmq-data:
+  # redis-data:
+  # nominatim-data:

@@ -1,0 +1,9 @@
+rootProject.name = 'bakelivery'
+
+include 'services:auth-service'
+project(':services:auth-service').projectDir = file('services/auth-service')
+
+include 'libs:bakelivery-common'
+project(':libs:bakelivery-common').projectDir = file('libs/bakelivery-common')
+include 'services:api-gateway'
+project(':services:api-gateway').projectDir = file('services/api-gateway')
