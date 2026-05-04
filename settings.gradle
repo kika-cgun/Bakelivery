@@ -5,5 +5,5 @@ project(':services:auth-service').projectDir = file('services/auth-service')
 
 include 'libs:bakelivery-common'
 project(':libs:bakelivery-common').projectDir = file('libs/bakelivery-common')
-// TODO odkomentować w Task 9
-// include 'services:api-gateway'
+include 'services:api-gateway'
+project(':services:api-gateway').projectDir = file('services/api-gateway')
