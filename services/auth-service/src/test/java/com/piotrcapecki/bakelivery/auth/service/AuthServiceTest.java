@@ -7,6 +7,7 @@ import com.piotrcapecki.bakelivery.auth.model.Bakery;
 import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
+import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.jwt.JwtClaims;
 import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -76,7 +77,7 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("user@test.com")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.register(new RegisterRequest("user@test.com", "pass123")))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("already in use");
     }
 

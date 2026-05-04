@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         properties = {
                 "spring.flyway.enabled=true",
                 "spring.jpa.hibernate.ddl-auto=validate"
@@ -156,7 +156,7 @@ class MultiTenantIsolationTest {
                         .with(authentication(authA))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 // The created user is in bakery A (from JWT), not bakery B
                 .andExpect(jsonPath("$.email").value("new-employee@test.com"))
                 .andExpect(jsonPath("$.role").value("DRIVER"));

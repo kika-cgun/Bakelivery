@@ -6,6 +6,7 @@ import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.repository.BakeryRepository;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
+import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -94,7 +95,7 @@ class UserManagementServiceTest {
         when(userRepository.existsByEmail("employee@test.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userManagementService.createEmployee(UUID.randomUUID(), request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessage("Email already in use");
 
         verify(bakeryRepository, never()).findById(any(UUID.class));

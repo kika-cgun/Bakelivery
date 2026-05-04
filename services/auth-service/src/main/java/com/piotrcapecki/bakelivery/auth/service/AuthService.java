@@ -6,6 +6,7 @@ import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
 import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
+import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.jwt.JwtClaims;
 import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class AuthService implements UserDetailsService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new ConflictException("Email already in use");
         }
         User user = User.builder()
                 .email(request.email())

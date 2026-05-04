@@ -5,6 +5,7 @@ import com.piotrcapecki.bakelivery.auth.model.Bakery;
 import com.piotrcapecki.bakelivery.auth.model.User;
 import com.piotrcapecki.bakelivery.auth.repository.BakeryRepository;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
+import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class UserManagementService {
     @Transactional
     public User createEmployee(UUID actingBakeryId, CreateEmployeeRequest req) {
         if (userRepository.existsByEmail(req.email())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new ConflictException("Email already in use");
         }
         Bakery bakery = actingBakeryId == null
                 ? null

@@ -108,7 +108,7 @@ class UserManagementControllerTest {
                         .with(authentication(authToken(actor)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(employeeJson("driver@test.com", "temporary123", Role.DRIVER)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(createdId.toString()))
                 .andExpect(jsonPath("$.email").value("driver@test.com"))
                 .andExpect(jsonPath("$.role").value("DRIVER"));

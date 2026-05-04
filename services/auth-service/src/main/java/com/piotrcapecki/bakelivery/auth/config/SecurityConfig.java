@@ -37,6 +37,7 @@ public class SecurityConfig {
                                 "/api/auth/refresh",
                                 "/api/auth/register").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/admin/platform/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/admin/users/**").hasAnyRole("SUPER_ADMIN", "BAKERY_ADMIN")
                         .anyRequest().authenticated()
