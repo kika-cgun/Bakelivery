@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -19,6 +20,11 @@ public class UserManagementService {
     private final UserRepository userRepository;
     private final BakeryRepository bakeryRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Transactional(readOnly = true)
+    public List<User> listEmployees(UUID bakeryId) {
+        return userRepository.findAllByBakeryId(bakeryId);
+    }
 
     @Transactional
     public User createEmployee(UUID actingBakeryId, CreateEmployeeRequest req) {

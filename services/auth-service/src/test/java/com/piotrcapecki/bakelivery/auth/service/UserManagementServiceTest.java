@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -37,6 +38,29 @@ class UserManagementServiceTest {
     @Mock BakeryRepository bakeryRepository;
     @Mock PasswordEncoder passwordEncoder;
     @InjectMocks UserManagementService userManagementService;
+
+    @Test
+    void listEmployees_returnsUsersForBakery() {
+        UUID bakeryId = UUID.randomUUID();
+        User user1 = User.builder()
+                .id(UUID.randomUUID())
+                .email("admin@bakery.test")
+                .passwordHash("hashedPw")
+                .role(Role.BAKERY_ADMIN)
+                .build();
+        User user2 = User.builder()
+                .id(UUID.randomUUID())
+                .email("driver@bakery.test")
+                .passwordHash("hashedPw")
+                .role(Role.DRIVER)
+                .build();
+        when(userRepository.findAllByBakeryId(bakeryId)).thenReturn(List.of(user1, user2));
+
+        List<User> result = userManagementService.listEmployees(bakeryId);
+
+        assertThat(result).containsExactly(user1, user2);
+        verify(userRepository).findAllByBakeryId(bakeryId);
+    }
 
     @ParameterizedTest
     @EnumSource(value = Role.class, names = {"DISPATCHER", "DRIVER"})
