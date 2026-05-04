@@ -16,6 +16,9 @@ public class RouteConfig {
     @Value("${gateway.routes.auth-service.uri:http://localhost:8081}")
     private String authServiceUri;
 
+    @Value("${gateway.routes.customer-service.uri:http://localhost:8082}")
+    private String customerServiceUri;
+
     private final JwtPropagationFilter jwtPropagationFilter;
 
     public RouteConfig(JwtPropagationFilter jwtPropagationFilter) {
@@ -28,6 +31,16 @@ public class RouteConfig {
                 .path("/api/auth/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(authServiceUri))
+                )
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> customerServiceRoute() {
+        return GatewayRouterFunctions.route("customer-service")
+                .path("/api/customer/**", builder -> builder
+                        .filter(jwtPropagationFilter)
+                        .route(RequestPredicates.all(), HandlerFunctions.http(customerServiceUri))
                 )
                 .build();
     }

@@ -38,9 +38,12 @@ services:
     depends_on:
       auth-service:
         condition: service_healthy
+      customer-service:
+        condition: service_started
     environment:
       JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
       AUTH_SERVICE_URL: http://auth-service:8081
+      CUSTOMER_SERVICE_URL: http://customer-service:8082
     ports: ["8080:8080"]
 
   postgres-customer:
