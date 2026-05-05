@@ -9,3 +9,5 @@ include 'services:api-gateway'
 project(':services:api-gateway').projectDir = file('services/api-gateway')
 include 'services:customer-service'
 project(':services:customer-service').projectDir = file('services/customer-service')
+include 'services:catalog-service'
+project(':services:catalog-service').projectDir = file('services/catalog-service')
