@@ -77,7 +77,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new RegisterRequest("newuser@test.com", "password123"))))
+                        .content(objectMapper.writeValueAsString(new RegisterRequest("newuser@test.com", "password123", "demo-bakery"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token"))

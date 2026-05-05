@@ -6,8 +6,10 @@ import com.piotrcapecki.bakelivery.auth.dto.RegisterRequest;
 import com.piotrcapecki.bakelivery.auth.model.Bakery;
 import com.piotrcapecki.bakelivery.auth.model.Role;
 import com.piotrcapecki.bakelivery.auth.model.User;
+import com.piotrcapecki.bakelivery.auth.repository.BakeryRepository;
 import com.piotrcapecki.bakelivery.auth.repository.UserRepository;
 import com.piotrcapecki.bakelivery.common.exception.ConflictException;
+import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import com.piotrcapecki.bakelivery.common.jwt.JwtClaims;
 import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ import static org.mockito.Mockito.when;
 class AuthServiceTest {
 
     @Mock UserRepository userRepository;
+    @Mock BakeryRepository bakeryRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtUtil jwtUtil;
     @Mock RefreshTokenService refreshTokenService;
@@ -45,14 +48,18 @@ class AuthServiceTest {
     @Test
     void register_savesUserAndReturnsToken() {
         UUID userId = UUID.randomUUID();
-        RegisterRequest request = new RegisterRequest("user@test.com", "password123");
+        UUID bakeryId = UUID.randomUUID();
+        Bakery bakery = Bakery.builder().id(bakeryId).name("Demo Bakery").slug("demo-bakery").build();
+        RegisterRequest request = new RegisterRequest("user@test.com", "password123", "demo-bakery");
         when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
+        when(bakeryRepository.findBySlug("demo-bakery")).thenReturn(Optional.of(bakery));
         when(passwordEncoder.encode("password123")).thenReturn("hashedPw");
         when(userRepository.save(any(User.class))).thenReturn(User.builder()
                 .id(userId)
                 .email("user@test.com")
                 .passwordHash("hashedPw")
                 .role(Role.CUSTOMER)
+                .bakery(bakery)
                 .build());
         when(jwtUtil.generateAccessToken(any(JwtClaims.class))).thenReturn("jwt-token");
         when(refreshTokenService.issue(userId)).thenReturn("refresh-token");
@@ -66,9 +73,10 @@ class AuthServiceTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getRole()).isEqualTo(Role.CUSTOMER);
+        assertThat(userCaptor.getValue().getBakery()).isEqualTo(bakery);
         ArgumentCaptor<JwtClaims> claimsCaptor = ArgumentCaptor.forClass(JwtClaims.class);
         verify(jwtUtil).generateAccessToken(claimsCaptor.capture());
-        assertThat(claimsCaptor.getValue()).isEqualTo(new JwtClaims("user@test.com", userId, null, "CUSTOMER"));
+        assertThat(claimsCaptor.getValue()).isEqualTo(new JwtClaims("user@test.com", userId, bakeryId, "CUSTOMER"));
         verify(refreshTokenService).issue(userId);
     }
 
@@ -76,9 +84,19 @@ class AuthServiceTest {
     void register_throwsWhenEmailAlreadyExists() {
         when(userRepository.existsByEmail("user@test.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> authService.register(new RegisterRequest("user@test.com", "pass123")))
+        assertThatThrownBy(() -> authService.register(new RegisterRequest("user@test.com", "pass123", "demo-bakery")))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("already in use");
+    }
+
+    @Test
+    void register_throwsWhenBakeryNotFound() {
+        when(userRepository.existsByEmail("user@test.com")).thenReturn(false);
+        when(bakeryRepository.findBySlug("unknown-bakery")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.register(new RegisterRequest("user@test.com", "pass123", "unknown-bakery")))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("unknown-bakery");
     }
 
     @Test
