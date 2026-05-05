@@ -14,13 +14,14 @@ public record UpsertProfileRequest(
         @Size(max = 50) String vatId,
         @Size(max = 500) String billingAddress) {
 
-    @AssertTrue(message = "companyName required for COMPANY type")
-    boolean isCompanyNameValid() {
-        return type != CustomerType.COMPANY || (companyName != null && !companyName.isBlank());
-    }
-
-    @AssertTrue(message = "vatId required for COMPANY type")
-    boolean isVatIdValid() {
-        return type != CustomerType.COMPANY || (vatId != null && !vatId.isBlank());
+    public UpsertProfileRequest {
+        if (type == CustomerType.COMPANY) {
+            if (companyName == null || companyName.isBlank()) {
+                throw new IllegalArgumentException("companyName required for COMPANY type");
+            }
+            if (vatId == null || vatId.isBlank()) {
+                throw new IllegalArgumentException("vatId required for COMPANY type");
+            }
+        }
     }
 }
