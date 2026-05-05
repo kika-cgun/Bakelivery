@@ -25,11 +25,8 @@ public class MinioConfig {
         return S3Client.builder()
                 .endpointOverride(URI.create(endpoint))
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)))
-                .serviceConfiguration(S3Configuration.builder()
-                        .pathStyleAccessEnabled(true)
-                        .build())
+                .credentialsProvider(credentials())
+                .serviceConfiguration(s3Config())
                 .build();
     }
 
@@ -38,11 +35,16 @@ public class MinioConfig {
         return S3Presigner.builder()
                 .endpointOverride(URI.create(endpoint))
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKey, secretKey)))
-                .serviceConfiguration(S3Configuration.builder()
-                        .pathStyleAccessEnabled(true)
-                        .build())
+                .credentialsProvider(credentials())
+                .serviceConfiguration(s3Config())
                 .build();
+    }
+
+    private StaticCredentialsProvider credentials() {
+        return StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey));
+    }
+
+    private S3Configuration s3Config() {
+        return S3Configuration.builder().pathStyleAccessEnabled(true).build();
     }
 }
