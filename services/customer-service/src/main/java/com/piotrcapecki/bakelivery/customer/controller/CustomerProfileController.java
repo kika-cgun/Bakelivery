@@ -1,6 +1,5 @@
 package com.piotrcapecki.bakelivery.customer.controller;
 
-import com.piotrcapecki.bakelivery.common.exception.ForbiddenException;
 import com.piotrcapecki.bakelivery.customer.dto.ProfileResponse;
 import com.piotrcapecki.bakelivery.customer.dto.UpsertProfileRequest;
 import com.piotrcapecki.bakelivery.customer.model.Customer;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/customer/profile")
 @RequiredArgsConstructor
-public class CustomerProfileController {
+public class CustomerProfileController extends BaseCustomerController {
 
     private final CustomerProfileService service;
 
@@ -32,11 +31,5 @@ public class CustomerProfileController {
         requireBakery(actor);
         Customer c = service.upsertProfile(actor.userId(), actor.bakeryId(), req);
         return ResponseEntity.ok(ProfileResponse.from(c));
-    }
-
-    private void requireBakery(CustomerPrincipal actor) {
-        if (actor == null || actor.bakeryId() == null) {
-            throw new ForbiddenException("This endpoint requires a bakery-scoped account");
-        }
     }
 }

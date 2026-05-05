@@ -7,7 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
-    Optional<Customer> findByUserId(UUID userId);
     Optional<Customer> findByUserIdAndBakeryId(UUID userId, UUID bakeryId);
-    boolean existsByUserId(UUID userId);
 }

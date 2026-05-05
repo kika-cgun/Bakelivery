@@ -1,6 +1,5 @@
 package com.piotrcapecki.bakelivery.customer.controller;
 
-import com.piotrcapecki.bakelivery.common.exception.ForbiddenException;
 import com.piotrcapecki.bakelivery.customer.dto.AddressResponse;
 import com.piotrcapecki.bakelivery.customer.dto.CreateAddressRequest;
 import com.piotrcapecki.bakelivery.customer.dto.UpdateAddressRequest;
@@ -19,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/customer/addresses")
 @RequiredArgsConstructor
-public class DeliveryAddressController {
+public class DeliveryAddressController extends BaseCustomerController {
 
     private final DeliveryAddressService service;
 
@@ -54,11 +53,5 @@ public class DeliveryAddressController {
         requireBakery(actor);
         service.delete(actor.userId(), actor.bakeryId(), id);
         return ResponseEntity.noContent().build();
-    }
-
-    private void requireBakery(CustomerPrincipal actor) {
-        if (actor == null || actor.bakeryId() == null) {
-            throw new ForbiddenException("This endpoint requires a bakery-scoped account");
-        }
     }
 }

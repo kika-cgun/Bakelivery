@@ -122,15 +122,19 @@ class MultiTenantIsolationTest {
 
     @Test
     void customerCannotReadProfileFromOtherBakery() throws Exception {
+        // Confirm both profiles exist in DB — ensures isolation is meaningful, not just DB emptiness
+        assertThat(customerRepository.findByUserIdAndBakeryId(userIdA, bakeryIdA)).isPresent();
+        assertThat(customerRepository.findByUserIdAndBakeryId(userIdB, bakeryIdB)).isPresent();
+
+        // A's token returns A's own profile (not B's), even though B's data is in the DB
         mockMvc.perform(get("/api/customer/profile").with(authentication(authToken(userIdA, bakeryIdA, "a@test.com"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Anna"))
                 .andExpect(jsonPath("$.userId").value(userIdA.toString()));
 
-        // B's profile not accessible with A's credentials (different userId+bakeryId scope)
-        assertThat(customerRepository.findByUserIdAndBakeryId(userIdB, bakeryIdB)).isPresent();
-        mockMvc.perform(get("/api/customer/profile").with(authentication(authToken(userIdA, bakeryIdA, "a@test.com"))))
-                .andExpect(jsonPath("$.firstName").value("Anna"));
+        // A's userId combined with B's bakeryId (spoofed JWT) cannot access any profile
+        mockMvc.perform(get("/api/customer/profile").with(authentication(authToken(userIdA, bakeryIdB, "a@test.com"))))
+                .andExpect(status().isNotFound());
     }
 
     @Test

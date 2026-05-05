@@ -1,6 +1,7 @@
 package com.piotrcapecki.bakelivery.customer.dto;
 
 import com.piotrcapecki.bakelivery.customer.model.CustomerType;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -11,16 +12,15 @@ public record UpsertProfileRequest(
         @Size(max = 40) String phone,
         @Size(max = 200) String companyName,
         @Size(max = 50) String vatId,
-        @Size(max = 500) String billingAddress
-) {
-    public UpsertProfileRequest {
-        if (type == CustomerType.COMPANY) {
-            if (companyName == null || companyName.isBlank()) {
-                throw new IllegalArgumentException("companyName required for COMPANY type");
-            }
-            if (vatId == null || vatId.isBlank()) {
-                throw new IllegalArgumentException("vatId required for COMPANY type");
-            }
-        }
+        @Size(max = 500) String billingAddress) {
+
+    @AssertTrue(message = "companyName required for COMPANY type")
+    boolean isCompanyNameValid() {
+        return type != CustomerType.COMPANY || (companyName != null && !companyName.isBlank());
+    }
+
+    @AssertTrue(message = "vatId required for COMPANY type")
+    boolean isVatIdValid() {
+        return type != CustomerType.COMPANY || (vatId != null && !vatId.isBlank());
     }
 }

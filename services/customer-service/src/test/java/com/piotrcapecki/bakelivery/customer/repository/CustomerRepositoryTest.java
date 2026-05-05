@@ -37,7 +37,7 @@ class CustomerRepositoryTest {
     @Autowired CustomerRepository repository;
 
     @Test
-    void saveAndFindByUserId_returnsSavedCustomer() {
+    void saveAndFindByUserIdAndBakeryId_returnsSavedCustomer() {
         UUID userId = UUID.randomUUID();
         UUID bakeryId = UUID.randomUUID();
         Customer saved = repository.save(Customer.builder()
@@ -49,7 +49,7 @@ class CustomerRepositoryTest {
                 .phone("+48 600 000 000")
                 .build());
 
-        Optional<Customer> found = repository.findByUserId(userId);
+        Optional<Customer> found = repository.findByUserIdAndBakeryId(userId, bakeryId);
 
         assertThat(found).isPresent();
         assertThat(found.get().getId()).isEqualTo(saved.getId());
