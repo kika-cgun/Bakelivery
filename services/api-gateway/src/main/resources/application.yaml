@@ -11,6 +11,8 @@ gateway:
       uri: ${AUTH_SERVICE_URL:http://localhost:8081}
     customer-service:
       uri: ${CUSTOMER_SERVICE_URL:http://localhost:8082}
+    catalog-service:
+      uri: ${CATALOG_SERVICE_URL:http://localhost:8083}
 
 jwt:
   secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}

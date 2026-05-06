@@ -126,6 +126,17 @@ class JwtPropagationFilterTest {
     }
 
     @Test
+    void filter_catalogProtectedPath_missingAuthHeader_returns401() throws Exception {
+        ServerRequest request = buildRequest("/api/catalog/products", null);
+
+        ServerResponse result = filter.filter(request, next);
+
+        assertThat(result.statusCode().value()).isEqualTo(401);
+        verify(next, never()).handle(any());
+        verify(jwtUtil, never()).parse(any());
+    }
+
+    @Test
     void filter_protectedPath_malformedAuthHeader_returns401() throws Exception {
         ServerRequest request = buildRequest("/api/orders/123", "Basic dXNlcjpwYXNz");
 
