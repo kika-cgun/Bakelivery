@@ -8,6 +8,10 @@ import com.piotrcapecki.bakelivery.catalog.repository.ProductVariantRepository;
 import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +50,15 @@ public class ProductVariantService {
                 .orElseThrow(() -> new NotFoundException("Product not found"));
         return variantRepo.findAllByProductIdOrderBySortOrderAscNameAsc(productId)
                 .stream().map(VariantResponse::of).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VariantResponse> listForProduct(UUID bakeryId, UUID productId, Pageable pageable) {
+        productRepo.findByIdAndBakeryId(productId, bakeryId)
+                .orElseThrow(() -> new NotFoundException("Product not found"));
+        PageRequest sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by("sortOrder").ascending().and(Sort.by("name").ascending()));
+        return variantRepo.findAllByProductId(productId, sorted).map(VariantResponse::of);
     }
 
     @Transactional

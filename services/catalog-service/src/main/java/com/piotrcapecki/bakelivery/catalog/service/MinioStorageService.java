@@ -21,8 +21,10 @@ public class MinioStorageService {
     private final S3Client s3;
     private final S3Presigner presigner;
 
-    @Value("${minio.bucket}") String bucket;
-    @Value("${minio.presign-ttl-seconds}") long presignTtl;
+    @Value("${minio.bucket}") private String bucket;
+    @Value("${minio.presign-ttl-seconds}") private long presignTtl;
+
+    public long getPresignTtlSeconds() { return presignTtl; }
 
     public void upload(String objectKey, String contentType, long size, InputStream content) throws IOException {
         s3.putObject(

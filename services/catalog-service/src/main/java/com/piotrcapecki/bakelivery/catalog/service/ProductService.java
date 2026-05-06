@@ -7,6 +7,10 @@ import com.piotrcapecki.bakelivery.catalog.repository.ProductRepository;
 import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +57,20 @@ public class ProductService {
     public List<ProductResponse> listActive(UUID bakeryId) {
         return repo.findAllByBakeryIdAndActiveTrueOrderByNameAsc(bakeryId)
                 .stream().map(ProductResponse::of).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> listAll(UUID bakeryId, Pageable pageable) {
+        PageRequest sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by("name").ascending());
+        return repo.findAllByBakeryId(bakeryId, sorted).map(ProductResponse::of);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> listActive(UUID bakeryId, Pageable pageable) {
+        PageRequest sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by("name").ascending());
+        return repo.findAllByBakeryIdAndActiveTrue(bakeryId, sorted).map(ProductResponse::of);
     }
 
     @Transactional(readOnly = true)

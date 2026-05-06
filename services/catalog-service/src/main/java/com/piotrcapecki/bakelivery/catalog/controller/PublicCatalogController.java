@@ -4,6 +4,9 @@ import com.piotrcapecki.bakelivery.catalog.dto.*;
 import com.piotrcapecki.bakelivery.catalog.security.CatalogPrincipal;
 import com.piotrcapecki.bakelivery.catalog.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +24,15 @@ public class PublicCatalogController {
     private final ProductMediaService mediaService;
 
     @GetMapping("/categories")
-    public List<CategoryResponse> categories(@AuthenticationPrincipal CatalogPrincipal user) {
-        return categoryService.list(user.bakeryId());
+    public Page<CategoryResponse> categories(@AuthenticationPrincipal CatalogPrincipal user,
+                                             @PageableDefault(size = 20) Pageable pageable) {
+        return categoryService.list(user.bakeryId(), pageable);
     }
 
     @GetMapping("/products")
-    public List<ProductResponse> activeProducts(@AuthenticationPrincipal CatalogPrincipal user) {
-        return productService.listActive(user.bakeryId());
+    public Page<ProductResponse> activeProducts(@AuthenticationPrincipal CatalogPrincipal user,
+                                                @PageableDefault(size = 20) Pageable pageable) {
+        return productService.listActive(user.bakeryId(), pageable);
     }
 
     @GetMapping("/products/{id}")

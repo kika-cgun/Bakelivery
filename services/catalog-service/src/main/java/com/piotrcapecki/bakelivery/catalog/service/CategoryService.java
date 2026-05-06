@@ -6,6 +6,10 @@ import com.piotrcapecki.bakelivery.catalog.repository.CategoryRepository;
 import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +40,13 @@ public class CategoryService {
     public List<CategoryResponse> list(UUID bakeryId) {
         return repo.findAllByBakeryIdOrderBySortOrderAscNameAsc(bakeryId)
                 .stream().map(CategoryResponse::of).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CategoryResponse> list(UUID bakeryId, Pageable pageable) {
+        PageRequest sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by("sortOrder").ascending().and(Sort.by("name").ascending()));
+        return repo.findAllByBakeryId(bakeryId, sorted).map(CategoryResponse::of);
     }
 
     @Transactional

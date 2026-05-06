@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,17 +66,17 @@ class PublicCatalogControllerTest {
         CatalogPrincipal customer = new CatalogPrincipal(UUID.randomUUID(), "cust@test.com", bakeryId, "CUSTOMER");
         UUID productId = UUID.randomUUID();
 
-        when(productService.listActive(bakeryId)).thenReturn(List.of(
+        when(productService.listActive(eq(bakeryId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
                 new ProductResponse(productId, UUID.randomUUID(), "SKU-001", "rye-bread",
                         "Rye Bread", "Fresh rye", new BigDecimal("5.00"), (short) 127, true)
-        ));
+        )));
 
         mockMvc.perform(get("/api/catalog/products")
                         .with(authentication(authToken(customer))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].slug").value("rye-bread"))
-                .andExpect(jsonPath("$[0].active").value(true));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].slug").value("rye-bread"))
+                .andExpect(jsonPath("$.content[0].active").value(true));
     }
 
     // 2. GET /api/catalog/products/{id} returns ProductDetailResponse with variants and media
@@ -92,7 +95,7 @@ class PublicCatalogControllerTest {
                 new VariantResponse(UUID.randomUUID(), "Large", null, new BigDecimal("1.00"), 2)
         ));
         when(mediaService.list(bakeryId, productId)).thenReturn(List.of(
-                new MediaResponse(UUID.randomUUID(), "http://minio/img.jpg", "image/jpeg", 2048, 0, true)
+                new MediaResponse(UUID.randomUUID(), "http://minio/img.jpg", "image/jpeg", 2048, 0, true, Instant.now().plusSeconds(900))
         ));
 
         mockMvc.perform(get("/api/catalog/products/" + productId)
@@ -132,17 +135,17 @@ class PublicCatalogControllerTest {
         UUID bakeryId = UUID.randomUUID();
         CatalogPrincipal customer = new CatalogPrincipal(UUID.randomUUID(), "cust@test.com", bakeryId, "CUSTOMER");
 
-        when(categoryService.list(bakeryId)).thenReturn(List.of(
+        when(categoryService.list(eq(bakeryId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
                 new CategoryResponse(UUID.randomUUID(), "Bread", "bread", 1),
                 new CategoryResponse(UUID.randomUUID(), "Cakes", "cakes", 2)
-        ));
+        )));
 
         mockMvc.perform(get("/api/catalog/categories")
                         .with(authentication(authToken(customer))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].slug").value("bread"))
-                .andExpect(jsonPath("$[1].slug").value("cakes"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].slug").value("bread"))
+                .andExpect(jsonPath("$.content[1].slug").value("cakes"));
     }
 
     // 6. DRIVER role can also read products
@@ -151,12 +154,12 @@ class PublicCatalogControllerTest {
         UUID bakeryId = UUID.randomUUID();
         CatalogPrincipal driver = new CatalogPrincipal(UUID.randomUUID(), "driver@test.com", bakeryId, "DRIVER");
 
-        when(productService.listActive(bakeryId)).thenReturn(List.of());
+        when(productService.listActive(eq(bakeryId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/api/catalog/products")
                         .with(authentication(authToken(driver))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     // 7. BAKERY_ADMIN can access public endpoints too
@@ -165,7 +168,7 @@ class PublicCatalogControllerTest {
         UUID bakeryId = UUID.randomUUID();
         CatalogPrincipal admin = new CatalogPrincipal(UUID.randomUUID(), "admin@test.com", bakeryId, "BAKERY_ADMIN");
 
-        when(productService.listActive(any())).thenReturn(List.of());
+        when(productService.listActive(any(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/api/catalog/products")
                         .with(authentication(authToken(admin))))

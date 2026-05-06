@@ -15,10 +15,10 @@ import java.net.URI;
 @Configuration
 public class MinioConfig {
 
-    @Value("${minio.endpoint}") String endpoint;
-    @Value("${minio.access-key}") String accessKey;
-    @Value("${minio.secret-key}") String secretKey;
-    @Value("${minio.region}") String region;
+    @Value("${minio.endpoint}") private String endpoint;
+    @Value("${minio.access-key}") private String accessKey;
+    @Value("${minio.secret-key}") private String secretKey;
+    @Value("${minio.region}") private String region;
 
     @Bean
     public S3Client s3Client() {

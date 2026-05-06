@@ -8,6 +8,7 @@ import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
@@ -35,7 +36,7 @@ class CategoryServiceTest {
         assertThat(updated.sortOrder()).isEqualTo(5);
 
         service.delete(bakery, created.id());
-        assertThat(service.list(bakery)).isEmpty();
+        assertThat(service.list(bakery, PageRequest.of(0, 20)).getContent()).isEmpty();
 
         assertThatThrownBy(() -> service.delete(bakery, created.id())).isInstanceOf(NotFoundException.class);
     }

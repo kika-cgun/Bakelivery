@@ -5,12 +5,14 @@ import com.piotrcapecki.bakelivery.catalog.security.CatalogPrincipal;
 import com.piotrcapecki.bakelivery.catalog.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,8 +30,9 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<ProductResponse> listAll(@AuthenticationPrincipal CatalogPrincipal user) {
-        return service.listAll(user.bakeryId());
+    public Page<ProductResponse> listAll(@AuthenticationPrincipal CatalogPrincipal user,
+                                         @PageableDefault(size = 20) Pageable pageable) {
+        return service.listAll(user.bakeryId(), pageable);
     }
 
     @GetMapping("/{id}")

@@ -2,7 +2,7 @@ CREATE TABLE products (
     id              UUID PRIMARY KEY,
     bakery_id       UUID NOT NULL,
     category_id     UUID,
-    sku             VARCHAR(60),
+    sku             VARCHAR(60),  -- intentionally not unique: SKUs are optional user-managed labels; add UNIQUE (bakery_id, sku) here if uniqueness becomes a product requirement
     slug            VARCHAR(160) NOT NULL,
     name            VARCHAR(160) NOT NULL,
     description     TEXT,

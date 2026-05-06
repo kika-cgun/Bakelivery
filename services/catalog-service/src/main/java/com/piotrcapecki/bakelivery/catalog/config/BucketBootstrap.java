@@ -7,6 +7,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
@@ -18,7 +19,7 @@ import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 @Slf4j
 public class BucketBootstrap {
 
-    @Value("${minio.bucket}") String bucket;
+    @Value("${minio.bucket}") private String bucket;
 
     @Bean
     public ApplicationRunner ensureBucket(S3Client s3) {
@@ -29,6 +30,9 @@ public class BucketBootstrap {
             } catch (NoSuchBucketException e) {
                 s3.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
                 log.info("Created MinIO bucket '{}'", bucket);
+            } catch (SdkException e) {
+                log.warn("Failed to verify/create MinIO bucket '{}': {}", bucket, e.getMessage());
+                throw e;
             }
         };
     }

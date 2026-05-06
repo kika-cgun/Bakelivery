@@ -23,6 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -130,17 +133,17 @@ class CategoryControllerTest {
         UUID bakeryId = UUID.randomUUID();
         CatalogPrincipal admin = new CatalogPrincipal(UUID.randomUUID(), "admin@test.com", bakeryId, "BAKERY_ADMIN");
 
-        when(service.list(bakeryId)).thenReturn(List.of(
+        when(service.list(eq(bakeryId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
                 new CategoryResponse(UUID.randomUUID(), "Bread", "bread", 1),
                 new CategoryResponse(UUID.randomUUID(), "Cakes", "cakes", 2)
-        ));
+        )));
 
         mockMvc.perform(get("/api/catalog/admin/categories")
                         .with(authentication(authToken(admin))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].slug").value("bread"))
-                .andExpect(jsonPath("$[1].slug").value("cakes"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].slug").value("bread"))
+                .andExpect(jsonPath("$.content[1].slug").value("cakes"));
     }
 
     // 6. PATCH → 200

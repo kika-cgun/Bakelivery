@@ -135,7 +135,7 @@ class MultiTenantIsolationTest {
         mockMvc.perform(get("/api/catalog/products")
                         .with(authentication(adminToken(bakeryIdB))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0));
 
         // 4. Bakery B GET /api/catalog/admin/products/{idA} → 404
         mockMvc.perform(get("/api/catalog/admin/products/" + productIdA)
@@ -161,6 +161,6 @@ class MultiTenantIsolationTest {
         mockMvc.perform(get("/api/catalog/products")
                         .with(authentication(customerToken(bakeryIdB))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 }

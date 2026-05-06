@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,7 +63,7 @@ class ProductMediaControllerTest {
         CatalogPrincipal admin = new CatalogPrincipal(UUID.randomUUID(), "admin@test.com", bakeryId, "BAKERY_ADMIN");
 
         when(service.upload(eq(bakeryId), eq(productId), any(), isNull(), eq(false)))
-                .thenReturn(new MediaResponse(mediaId, "http://minio/presigned", "image/jpeg", 1024, 0, false));
+                .thenReturn(new MediaResponse(mediaId, "http://minio/presigned", "image/jpeg", 1024, 0, false, Instant.now().plusSeconds(900)));
 
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[1024]);
 
@@ -83,7 +84,7 @@ class ProductMediaControllerTest {
         CatalogPrincipal dispatcher = new CatalogPrincipal(UUID.randomUUID(), "disp@test.com", bakeryId, "DISPATCHER");
 
         when(service.upload(eq(bakeryId), eq(productId), any(), isNull(), eq(false)))
-                .thenReturn(new MediaResponse(mediaId, "http://minio/presigned", "image/png", 2048, 0, true));
+                .thenReturn(new MediaResponse(mediaId, "http://minio/presigned", "image/png", 2048, 0, true, Instant.now().plusSeconds(900)));
 
         MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", new byte[2048]);
 
@@ -151,9 +152,10 @@ class ProductMediaControllerTest {
         UUID productId = UUID.randomUUID();
         CatalogPrincipal admin = new CatalogPrincipal(UUID.randomUUID(), "admin@test.com", bakeryId, "BAKERY_ADMIN");
 
+        Instant expiresAt = Instant.now().plusSeconds(900);
         when(service.list(eq(bakeryId), eq(productId))).thenReturn(List.of(
-                new MediaResponse(UUID.randomUUID(), "http://minio/img1.jpg", "image/jpeg", 1024, 0, true),
-                new MediaResponse(UUID.randomUUID(), "http://minio/img2.jpg", "image/jpeg", 2048, 1, false)
+                new MediaResponse(UUID.randomUUID(), "http://minio/img1.jpg", "image/jpeg", 1024, 0, true, expiresAt),
+                new MediaResponse(UUID.randomUUID(), "http://minio/img2.jpg", "image/jpeg", 2048, 1, false, expiresAt)
         ));
 
         mockMvc.perform(get("/api/catalog/admin/products/" + productId + "/media")

@@ -136,9 +136,6 @@ services:
       retries: 10
       start_period: 30s
 
-  # ─── Faza 3: MinIO ─────────────────────────────────────────────
-  # minio: ...
-
   # ─── Faza 4: RabbitMQ + Mailpit ────────────────────────────────
   # rabbitmq: ...
   # mailpit: ...
@@ -151,7 +148,6 @@ volumes:
   pg-customer-data:
   pg-catalog-data:
   minio-data:
-  # minio-data:
   # rabbitmq-data:
   # redis-data:
   # nominatim-data:

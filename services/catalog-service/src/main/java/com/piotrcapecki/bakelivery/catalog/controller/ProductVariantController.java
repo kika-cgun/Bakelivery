@@ -5,12 +5,14 @@ import com.piotrcapecki.bakelivery.catalog.security.CatalogPrincipal;
 import com.piotrcapecki.bakelivery.catalog.service.ProductVariantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,9 +31,10 @@ public class ProductVariantController {
     }
 
     @GetMapping("/products/{productId}/variants")
-    public List<VariantResponse> list(@AuthenticationPrincipal CatalogPrincipal user,
-                                      @PathVariable UUID productId) {
-        return service.listForProduct(user.bakeryId(), productId);
+    public Page<VariantResponse> list(@AuthenticationPrincipal CatalogPrincipal user,
+                                      @PathVariable UUID productId,
+                                      @PageableDefault(size = 50) Pageable pageable) {
+        return service.listForProduct(user.bakeryId(), productId, pageable);
     }
 
     @PatchMapping("/variants/{variantId}")

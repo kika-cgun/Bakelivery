@@ -9,9 +9,13 @@ import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -38,6 +42,8 @@ public class ProductMediaService {
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
             throw new IllegalArgumentException("Unsupported content type: " + contentType);
         }
+        validateMagicBytes(file, contentType);
+
         UUID id = UUID.randomUUID();
         String ext = switch (contentType) {
             case "image/jpeg" -> ".jpg";
@@ -59,11 +65,16 @@ public class ProductMediaService {
                 .sortOrder(sortOrder == null ? 0 : sortOrder)
                 .primary(makePrimary)
                 .build();
-        MediaAsset saved = mediaRepo.save(asset);
-        if (makePrimary) {
-            mediaRepo.unsetPrimaryExcept(p.getId(), saved.getId());
+        try {
+            MediaAsset saved = mediaRepo.save(asset);
+            if (makePrimary) {
+                mediaRepo.unsetPrimaryExcept(p.getId(), saved.getId());
+            }
+            return toResponse(saved);
+        } catch (Exception e) {
+            try { storage.delete(key); } catch (Exception suppressed) { e.addSuppressed(suppressed); }
+            throw e;
         }
-        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -78,8 +89,39 @@ public class ProductMediaService {
     public void delete(UUID bakeryId, UUID mediaId) {
         MediaAsset asset = mediaRepo.findByIdAndBakeryId(mediaId, bakeryId)
                 .orElseThrow(() -> new NotFoundException("Media not found"));
-        storage.delete(asset.getObjectKey());
+        String objectKey = asset.getObjectKey();
         mediaRepo.delete(asset);
+        // MinIO deletion deferred to after DB commit to avoid record-pointing-to-missing-object state
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                storage.delete(objectKey);
+            }
+        });
+    }
+
+    private void validateMagicBytes(MultipartFile file, String contentType) throws IOException {
+        byte[] header = new byte[12];
+        int read;
+        try (InputStream in = file.getInputStream()) {
+            read = in.read(header, 0, header.length);
+        }
+        if (read < 4) {
+            throw new IllegalArgumentException("File too small to determine type");
+        }
+        boolean valid = switch (contentType) {
+            case "image/jpeg" ->
+                    (header[0] & 0xFF) == 0xFF && (header[1] & 0xFF) == 0xD8 && (header[2] & 0xFF) == 0xFF;
+            case "image/png" ->
+                    (header[0] & 0xFF) == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47;
+            case "image/webp" ->
+                    header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46
+                    && read >= 12 && header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50;
+            default -> false;
+        };
+        if (!valid) {
+            throw new IllegalArgumentException("File bytes do not match declared content type: " + contentType);
+        }
     }
 
     private MediaResponse toResponse(MediaAsset m) {
@@ -89,6 +131,7 @@ public class ProductMediaService {
                 m.getContentType(),
                 m.getSizeBytes(),
                 m.getSortOrder(),
-                m.isPrimary());
+                m.isPrimary(),
+                Instant.now().plusSeconds(storage.getPresignTtlSeconds()));
     }
 }

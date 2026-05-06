@@ -9,6 +9,7 @@ import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -55,7 +56,7 @@ class ProductVariantServiceTest {
 
         // Delete
         variantService.delete(bakery, variant.id());
-        assertThat(variantService.listForProduct(bakery, product.id())).isEmpty();
+        assertThat(variantService.listForProduct(bakery, product.id(), PageRequest.of(0, 20)).getContent()).isEmpty();
 
         // Delete non-existent
         assertThatThrownBy(() -> variantService.delete(bakery, UUID.randomUUID()))

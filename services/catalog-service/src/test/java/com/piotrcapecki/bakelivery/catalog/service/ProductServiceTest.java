@@ -7,6 +7,7 @@ import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -38,8 +39,8 @@ class ProductServiceTest {
         assertThat(updated.basePrice()).isEqualByComparingTo("9.00");
 
         service.softDelete(bakery, created.id());
-        assertThat(service.listActive(bakery)).isEmpty();
-        assertThat(service.listAll(bakery)).hasSize(1);
+        assertThat(service.listActive(bakery, PageRequest.of(0, 20)).getContent()).isEmpty();
+        assertThat(service.listAll(bakery, PageRequest.of(0, 20)).getContent()).hasSize(1);
 
         assertThatThrownBy(() -> service.softDelete(UUID.randomUUID(), created.id()))
                 .isInstanceOf(NotFoundException.class);

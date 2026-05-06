@@ -22,6 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -119,17 +122,17 @@ class ProductVariantControllerTest {
         UUID productId = UUID.randomUUID();
         CatalogPrincipal admin = new CatalogPrincipal(UUID.randomUUID(), "admin@test.com", bakeryId, "BAKERY_ADMIN");
 
-        when(service.listForProduct(eq(bakeryId), eq(productId))).thenReturn(List.of(
+        when(service.listForProduct(eq(bakeryId), eq(productId), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(
                 new VariantResponse(UUID.randomUUID(), "Small", null, new BigDecimal("0.00"), 1),
                 new VariantResponse(UUID.randomUUID(), "Large", "SKU-L", new BigDecimal("2.00"), 2)
-        ));
+        )));
 
         mockMvc.perform(get("/api/catalog/admin/products/" + productId + "/variants")
                         .with(authentication(authToken(admin))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Small"))
-                .andExpect(jsonPath("$[1].name").value("Large"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].name").value("Small"))
+                .andExpect(jsonPath("$.content[1].name").value("Large"));
     }
 
     // 5. PATCH /api/catalog/admin/variants/{variantId} → 200
