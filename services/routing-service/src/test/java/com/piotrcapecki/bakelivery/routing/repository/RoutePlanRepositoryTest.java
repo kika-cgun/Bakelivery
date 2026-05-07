@@ -4,6 +4,7 @@ import com.piotrcapecki.bakelivery.routing.model.RoutePlan;
 import com.piotrcapecki.bakelivery.routing.model.RoutePlanStatus;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,7 @@ class RoutePlanRepositoryTest {
 
     @MockitoBean RedissonClient redissonClient;
     @MockitoBean RabbitTemplate rabbitTemplate;
+    @MockitoBean ConnectionFactory connectionFactory;
 
     @Autowired RoutePlanRepository repo;
 
