@@ -1,0 +1,34 @@
+server:
+  port: 8091
+spring:
+  application:
+    name: invoice-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5437/bakelivery_invoice}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minio}
+  secret-key: ${MINIO_SECRET_KEY:minio12345}
+  bucket: ${MINIO_BUCKET:bakelivery-invoices}
+  region: ${MINIO_REGION:us-east-1}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
