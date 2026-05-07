@@ -42,11 +42,14 @@ services:
         condition: service_healthy
       catalog-service:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
       AUTH_SERVICE_URL: http://auth-service:8081
       CUSTOMER_SERVICE_URL: http://customer-service:8082
       CATALOG_SERVICE_URL: http://catalog-service:8083
+      REDIS_URL: redis://redis:6379
     ports: ["8080:8080"]
 
   postgres-customer:
@@ -69,11 +72,14 @@ services:
     depends_on:
       postgres-customer:
         condition: service_healthy
+      maps-service:
+        condition: service_healthy
     environment:
       DB_URL: jdbc:postgresql://postgres-customer:5432/bakelivery_customer
       DB_USER: postgres
       DB_PASSWORD: postgres
       JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+      MAPS_SERVICE_URL: http://maps-service:8089
     ports: ["8082:8082"]
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
@@ -140,14 +146,49 @@ services:
   # rabbitmq: ...
   # mailpit: ...
 
-  # ─── Faza 5: Redis ─────────────────────────────────────────────
-  # redis: ...
+  # ─── Faza 5: Redis + OSRM + maps-service ───────────────────────
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: ["redis-data:/data"]
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  osrm:
+    image: osrm/osrm-backend:v5.27.1
+    command: osrm-routed --algorithm mld /data/poland-latest.osrm
+    volumes: ["osrm-data:/data"]
+    ports: ["5000:5000"]
+    profiles: ["osrm"]
+
+  maps-service:
+    build:
+      context: ../services/maps-service
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+      OSRM_URL: http://osrm:5000
+      NOMINATIM_URL: https://nominatim.openstreetmap.org
+      NOMINATIM_USER_AGENT: bakelivery/1.0
+    ports: ["8089:8089"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 volumes:
   pg-auth-data:
   pg-customer-data:
   pg-catalog-data:
   minio-data:
-  # rabbitmq-data:
-  # redis-data:
-  # nominatim-data:
+  redis-data:
+  osrm-data:
