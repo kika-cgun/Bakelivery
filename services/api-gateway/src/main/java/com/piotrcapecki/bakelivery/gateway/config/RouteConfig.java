@@ -1,6 +1,7 @@
 package com.piotrcapecki.bakelivery.gateway.config;
 
 import com.piotrcapecki.bakelivery.gateway.filter.JwtPropagationFilter;
+import com.piotrcapecki.bakelivery.gateway.filter.RateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
@@ -23,15 +24,18 @@ public class RouteConfig {
     private String catalogServiceUri;
 
     private final JwtPropagationFilter jwtPropagationFilter;
+    private final RateLimitFilter rateLimitFilter;
 
-    public RouteConfig(JwtPropagationFilter jwtPropagationFilter) {
+    public RouteConfig(JwtPropagationFilter jwtPropagationFilter, RateLimitFilter rateLimitFilter) {
         this.jwtPropagationFilter = jwtPropagationFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
     public RouterFunction<ServerResponse> authServiceRoute() {
         return GatewayRouterFunctions.route("auth-service")
                 .path("/api/auth/**", builder -> builder
+                        .filter(rateLimitFilter)
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(authServiceUri))
                 )
@@ -42,6 +46,7 @@ public class RouteConfig {
     public RouterFunction<ServerResponse> customerServiceRoute() {
         return GatewayRouterFunctions.route("customer-service")
                 .path("/api/customer/**", builder -> builder
+                        .filter(rateLimitFilter)
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(customerServiceUri))
                 )
@@ -52,6 +57,7 @@ public class RouteConfig {
     public RouterFunction<ServerResponse> catalogServiceRoute() {
         return GatewayRouterFunctions.route("catalog-service")
                 .path("/api/catalog/**", builder -> builder
+                        .filter(rateLimitFilter)
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(catalogServiceUri))
                 )
