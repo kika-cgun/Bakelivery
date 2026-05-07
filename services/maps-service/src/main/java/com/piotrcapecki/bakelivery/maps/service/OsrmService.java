@@ -1,21 +1,19 @@
 package com.piotrcapecki.bakelivery.maps.service;
 
-import tools.jackson.databind.ObjectMapper;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import com.piotrcapecki.bakelivery.maps.client.OsrmClient;
 import com.piotrcapecki.bakelivery.maps.dto.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class OsrmService {
 
@@ -23,9 +21,19 @@ public class OsrmService {
     private final StringRedisTemplate redis;
     private final CacheKeyService cacheKeyService;
     private final ObjectMapper objectMapper;
+    private final long matrixTtlHours;
 
-    @Value("${cache.matrix-ttl-hours:24}")
-    private long matrixTtlHours;
+    public OsrmService(OsrmClient osrmClient,
+                       StringRedisTemplate redis,
+                       CacheKeyService cacheKeyService,
+                       ObjectMapper objectMapper,
+                       @Value("${cache.matrix-ttl-hours:24}") long matrixTtlHours) {
+        this.osrmClient = osrmClient;
+        this.redis = redis;
+        this.cacheKeyService = cacheKeyService;
+        this.objectMapper = objectMapper;
+        this.matrixTtlHours = matrixTtlHours;
+    }
 
     public MatrixResponse matrix(MatrixRequest request) {
         String key = cacheKeyService.matrixKey(request.sources(), request.destinations());
@@ -33,7 +41,11 @@ public class OsrmService {
         String cached = redis.opsForValue().get(key);
         if (cached != null) {
             log.debug("Matrix cache HIT, key={}", key);
-            return deserializeMatrixResponse(cached, true);
+            MatrixResponse cachedResponse = deserializeMatrixResponse(cached);
+            if (cachedResponse != null) {
+                return new MatrixResponse(cachedResponse.durations(), cachedResponse.distances(), true);
+            }
+            // Corrupt cache entry — fall through to re-query
         }
 
         log.info("Matrix cache MISS — OSRM table query, {} sources × {} destinations",
@@ -90,12 +102,11 @@ public class OsrmService {
         return new RouteResponse(route.distance(), route.duration(), geometryJson, steps);
     }
 
-    private MatrixResponse deserializeMatrixResponse(String json, boolean cached) {
+    private MatrixResponse deserializeMatrixResponse(String json) {
         try {
-            MatrixResponse base = objectMapper.readValue(json, MatrixResponse.class);
-            return new MatrixResponse(base.durations(), base.distances(), cached);
+            return objectMapper.readValue(json, MatrixResponse.class);
         } catch (Exception e) {
-            log.error("Błąd deserializacji matrix z Redis: {}", e.getMessage());
+            log.error("Błąd deserializacji matrix z Redis, wpis zostanie zignorowany: {}", e.getMessage());
             return null;
         }
     }
