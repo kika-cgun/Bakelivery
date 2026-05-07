@@ -12,7 +12,7 @@ import com.piotrcapecki.bakelivery.order.model.OrderItem;
 import com.piotrcapecki.bakelivery.order.model.OrderStatus;
 import com.piotrcapecki.bakelivery.order.repository.OrderRepository;
 import com.piotrcapecki.bakelivery.order.security.OrderPrincipal;
-import feign.FeignException;
+import org.springframework.web.client.HttpClientErrorException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,7 +45,7 @@ public class OrderService {
                         itemReq.productId(),
                         principal.bakeryId().toString(),
                         bearerToken);
-            } catch (FeignException.NotFound e) {
+            } catch (HttpClientErrorException.NotFound e) {
                 throw new NotFoundException("Product not found: " + itemReq.productId());
             }
 
@@ -95,7 +95,7 @@ public class OrderService {
 
         Order saved;
         try {
-            saved = orderRepo.save(order);
+            saved = orderRepo.saveAndFlush(order);
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("Duplicate order");
         }

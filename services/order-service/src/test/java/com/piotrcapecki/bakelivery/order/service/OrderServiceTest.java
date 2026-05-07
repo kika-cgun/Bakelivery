@@ -11,7 +11,7 @@ import com.piotrcapecki.bakelivery.order.dto.catalog.VariantResponse;
 import com.piotrcapecki.bakelivery.order.model.OrderStatus;
 import com.piotrcapecki.bakelivery.order.repository.OrderRepository;
 import com.piotrcapecki.bakelivery.order.security.OrderPrincipal;
-import feign.FeignException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,7 +98,7 @@ class OrderServiceTest {
         OrderPrincipal principal = new OrderPrincipal(UUID.randomUUID(), "x@test.com", bakery, "CUSTOMER");
 
         when(catalogClient.getProduct(eq(productId), anyString(), anyString()))
-                .thenThrow(FeignException.NotFound.class);
+                .thenThrow(HttpClientErrorException.NotFound.class);
 
         CreateOrderRequest req = new CreateOrderRequest(
                 UUID.randomUUID(), "ul. A 1", List.of(new OrderItemRequest(productId, null, 1)), null);

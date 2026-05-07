@@ -79,6 +79,7 @@ class OrderControllerTest {
         mockMvc.perform(post("/api/orders")
                         .with(authentication(authToken(principal)))
                         .header("Idempotency-Key", UUID.randomUUID().toString())
+                        .header("Authorization", "Bearer test-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
@@ -102,6 +103,7 @@ class OrderControllerTest {
         mockMvc.perform(post("/api/orders")
                         .with(authentication(authToken(principal)))
                         .header("Idempotency-Key", UUID.randomUUID().toString())
+                        .header("Authorization", "Bearer test-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isConflict());
