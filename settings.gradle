@@ -21,3 +21,5 @@ include 'services:invoice-service'
 project(':services:invoice-service').projectDir = file('services/invoice-service')
 include 'services:dispatching-service'
 project(':services:dispatching-service').projectDir = file('services/dispatching-service')
+include 'services:routing-service'
+project(':services:routing-service').projectDir = file('services/routing-service')

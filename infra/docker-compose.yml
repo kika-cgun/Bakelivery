@@ -347,6 +347,48 @@ services:
       retries: 10
       start_period: 30s
 
+  postgres-routing:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bakelivery_routing
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5439:5432"]
+    volumes: ["pg-routing-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bakelivery_routing"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  routing-service:
+    build:
+      context: ..
+      dockerfile: services/routing-service/Dockerfile
+    depends_on:
+      postgres-routing:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres-routing:5432/bakelivery_routing
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+      DISPATCH_SERVICE_URL: http://dispatching-service:8085
+      MAPS_SERVICE_URL: http://maps-service:8089
+    ports: ["8086:8086"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
 volumes:
   pg-auth-data:
   pg-customer-data:
@@ -354,6 +396,7 @@ volumes:
   pg-order-data:
   pg-invoice-data:
   pg-dispatch-data:
+  pg-routing-data:
   minio-data:
   rabbitmq-data:
   redis-data:

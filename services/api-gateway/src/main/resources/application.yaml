@@ -20,6 +20,8 @@ gateway:
       uri: ${ORDER_SERVICE_URL:http://localhost:8084}
     dispatching-service:
       uri: ${DISPATCHING_SERVICE_URL:http://localhost:8085}
+    routing-service:
+      uri: ${ROUTING_SERVICE_URL:http://localhost:8086}
 
 jwt:
   secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
