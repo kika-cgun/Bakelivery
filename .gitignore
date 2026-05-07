@@ -111,6 +111,12 @@ dist/
 .worktrees/
 
 # ──────────────────────────────────────────
+#  OSRM / Nominatim data (duże pliki binarne)
+# ──────────────────────────────────────────
+infra/osrm-data/
+infra/nominatim-data/
+
+# ──────────────────────────────────────────
 #  Tymczasowe śmieci
 # ──────────────────────────────────────────
 *.tmp
