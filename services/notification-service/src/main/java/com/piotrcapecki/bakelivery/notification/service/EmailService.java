@@ -3,6 +3,7 @@ package com.piotrcapecki.bakelivery.notification.service;
 import com.piotrcapecki.bakelivery.notification.dto.OrderPlacedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,13 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Value("${mail.from:no-reply@bakelivery.local}")
+    private String fromAddress;
+
     public void sendOrderConfirmation(OrderPlacedEvent event) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(event.customerEmail());
-        message.setFrom("no-reply@bakelivery.local");
+        message.setFrom(fromAddress);
         message.setSubject("Zamówienie #" + event.orderId() + " złożone");
         message.setText("Dziękujemy! Kwota: " + event.totalAmount() + " PLN.\n\n" +
                 "Adres dostawy: " + event.deliveryAddress() + "\n" +

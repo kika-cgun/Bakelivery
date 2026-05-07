@@ -1,7 +1,7 @@
 package com.piotrcapecki.bakelivery.invoice.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,5 +13,5 @@ public record OrderPlacedEvent(
         String deliveryAddress,
         BigDecimal totalAmount,
         List<OrderItemResponse> items,
-        LocalDateTime placedAt
+        OffsetDateTime placedAt
 ) {}

@@ -1,6 +1,5 @@
 package com.piotrcapecki.bakelivery.order.service;
 
-import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import com.piotrcapecki.bakelivery.order.client.CatalogClient;
 import com.piotrcapecki.bakelivery.order.dto.*;
@@ -108,7 +107,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void placeOrder_duplicateIdempotencyKey_throwsConflict() {
+    void placeOrder_duplicateIdempotencyKey_returnsOriginalOrder() {
         UUID bakery = UUID.randomUUID();
         UUID productId = UUID.randomUUID();
         OrderPrincipal principal = new OrderPrincipal(UUID.randomUUID(), "cust@test.com", bakery, "CUSTOMER");
@@ -120,11 +119,11 @@ class OrderServiceTest {
         CreateOrderRequest req = new CreateOrderRequest(
                 UUID.randomUUID(), "ul. A 1", List.of(new OrderItemRequest(productId, null, 1)), null);
 
-        service.placeOrder(principal, req, key, "Bearer token");
+        OrderResponse first = service.placeOrder(principal, req, key, "Bearer token");
+        OrderResponse second = service.placeOrder(principal, req, key, "Bearer token");
 
-        assertThatThrownBy(() -> service.placeOrder(principal, req, key, "Bearer token"))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("Duplicate order");
+        assertThat(second.id()).isEqualTo(first.id());
+        assertThat(second.totalAmount()).isEqualByComparingTo(first.totalAmount());
     }
 
     @Test

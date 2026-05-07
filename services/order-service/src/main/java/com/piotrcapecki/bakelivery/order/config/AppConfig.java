@@ -5,6 +5,7 @@ import com.piotrcapecki.bakelivery.order.client.CatalogClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -20,7 +21,14 @@ public class AppConfig {
 
     @Bean
     public CatalogClient catalogClient(@Value("${catalog.service.url:http://localhost:8083}") String baseUrl) {
-        RestClient restClient = RestClient.create(baseUrl);
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(3_000);
+        requestFactory.setReadTimeout(5_000);
+
+        RestClient restClient = RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(requestFactory)
+                .build();
         HttpServiceProxyFactory factory = HttpServiceProxyFactory
                 .builderFor(RestClientAdapter.create(restClient)).build();
         return factory.createClient(CatalogClient.class);

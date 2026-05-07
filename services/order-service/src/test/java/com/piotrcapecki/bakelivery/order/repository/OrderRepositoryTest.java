@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -40,7 +42,9 @@ class OrderRepositoryTest {
         orderRepo.save(buildOrder(bakery, customer));
         orderRepo.save(buildOrder(bakery, otherCustomer));
 
-        List<Order> results = orderRepo.findAllByCustomerIdAndBakeryIdOrderByCreatedAtDesc(customer, bakery);
+        List<Order> results = orderRepo
+                .findAllByCustomerIdAndBakeryIdOrderByCreatedAtDesc(customer, bakery, Pageable.unpaged())
+                .getContent();
         assertThat(results).hasSize(2);
         assertThat(results).allMatch(o -> o.getCustomerId().equals(customer));
     }

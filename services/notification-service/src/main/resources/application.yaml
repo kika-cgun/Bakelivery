@@ -19,6 +19,8 @@ spring:
           auth: false
           starttls:
             enable: false
+mail:
+  from: ${MAIL_FROM:no-reply@bakelivery.local}
 management:
   endpoints:
     web:

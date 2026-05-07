@@ -25,6 +25,11 @@ public class InvoiceService {
     private String bucket;
 
     public void processOrderPlaced(OrderPlacedEvent event) {
+        if (invoiceRepo.existsByOrderId(event.orderId())) {
+            log.info("Invoice already processed for order {}, skipping", event.orderId());
+            return;
+        }
+
         Invoice invoice = Invoice.builder()
                 .bakeryId(event.bakeryId())
                 .orderId(event.orderId())

@@ -3,7 +3,7 @@ package com.piotrcapecki.bakelivery.order.dto;
 import com.piotrcapecki.bakelivery.order.model.Order;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,7 +16,7 @@ public record OrderResponse(
         String deliveryAddress,
         String notes,
         List<OrderItemResponse> items,
-        LocalDateTime createdAt
+        OffsetDateTime createdAt
 ) {
     public static OrderResponse of(Order order) {
         return new OrderResponse(
@@ -28,6 +28,6 @@ public record OrderResponse(
                 order.getDeliveryAddress(),
                 order.getNotes(),
                 order.getItems().stream().map(OrderItemResponse::of).toList(),
-                order.getCreatedAt() == null ? null : order.getCreatedAt().toLocalDateTime());
+                order.getCreatedAt());
     }
 }

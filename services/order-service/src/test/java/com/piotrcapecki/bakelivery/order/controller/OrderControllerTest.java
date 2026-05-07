@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,7 +61,7 @@ class OrderControllerTest {
 
     private OrderResponse sampleOrderResponse(UUID bakery, UUID customer) {
         return new OrderResponse(UUID.randomUUID(), bakery, customer, "PLACED",
-                new BigDecimal("25.00"), "ul. Testowa 1", null, List.of(), LocalDateTime.now());
+                new BigDecimal("25.00"), "ul. Testowa 1", null, List.of(), OffsetDateTime.now());
     }
 
     @Test
@@ -124,7 +126,7 @@ class OrderControllerTest {
         UUID bakery = UUID.randomUUID();
         OrderPrincipal admin = new OrderPrincipal(UUID.randomUUID(), "admin@bakery.com", bakery, "BAKERY_ADMIN");
 
-        when(orderService.listForAdmin(bakery)).thenReturn(List.of());
+        when(orderService.listForAdmin(eq(bakery), any(Pageable.class))).thenReturn(Page.empty());
 
         mockMvc.perform(get("/api/orders/admin")
                         .with(authentication(authToken(admin))))
@@ -143,5 +145,31 @@ class OrderControllerTest {
         mockMvc.perform(get("/api/orders/" + orderId)
                         .with(authentication(authToken(customer))))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAdminOrder_asBakeryAdmin_returns200() throws Exception {
+        UUID bakery = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+        OrderPrincipal admin = new OrderPrincipal(UUID.randomUUID(), "admin@bakery.com", bakery, "BAKERY_ADMIN");
+
+        when(orderService.getForAdmin(eq(orderId), eq(bakery)))
+                .thenReturn(sampleOrderResponse(bakery, UUID.randomUUID()));
+
+        mockMvc.perform(get("/api/orders/admin/" + orderId)
+                        .with(authentication(authToken(admin))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PLACED"));
+    }
+
+    @Test
+    void getAdminOrder_asCustomer_returns403() throws Exception {
+        UUID bakery = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+        OrderPrincipal customer = new OrderPrincipal(UUID.randomUUID(), "cust@test.com", bakery, "CUSTOMER");
+
+        mockMvc.perform(get("/api/orders/admin/" + orderId)
+                        .with(authentication(authToken(customer))))
+                .andExpect(status().isForbidden());
     }
 }

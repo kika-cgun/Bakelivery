@@ -5,11 +5,13 @@ import com.piotrcapecki.bakelivery.order.security.OrderPrincipal;
 import com.piotrcapecki.bakelivery.order.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,8 +30,9 @@ public class OrderController {
     }
 
     @GetMapping("/api/orders")
-    public List<OrderResponse> listMyOrders(@AuthenticationPrincipal OrderPrincipal principal) {
-        return service.listForCustomer(principal.userId(), principal.bakeryId());
+    public Page<OrderResponse> listMyOrders(@AuthenticationPrincipal OrderPrincipal principal,
+                                             @PageableDefault(size = 20) Pageable pageable) {
+        return service.listForCustomer(principal.userId(), principal.bakeryId(), pageable);
     }
 
     @GetMapping("/api/orders/{id}")
@@ -39,8 +42,15 @@ public class OrderController {
     }
 
     @GetMapping("/api/orders/admin")
-    public List<OrderResponse> listAllOrders(@AuthenticationPrincipal OrderPrincipal principal) {
-        return service.listForAdmin(principal.bakeryId());
+    public Page<OrderResponse> listAllOrders(@AuthenticationPrincipal OrderPrincipal principal,
+                                              @PageableDefault(size = 20) Pageable pageable) {
+        return service.listForAdmin(principal.bakeryId(), pageable);
+    }
+
+    @GetMapping("/api/orders/admin/{id}")
+    public OrderResponse getOrderForAdmin(@AuthenticationPrincipal OrderPrincipal principal,
+                                          @PathVariable UUID id) {
+        return service.getForAdmin(id, principal.bakeryId());
     }
 
     @PatchMapping("/api/orders/admin/{id}/status")

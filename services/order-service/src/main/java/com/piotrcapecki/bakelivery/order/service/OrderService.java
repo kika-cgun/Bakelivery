@@ -1,6 +1,5 @@
 package com.piotrcapecki.bakelivery.order.service;
 
-import com.piotrcapecki.bakelivery.common.exception.ConflictException;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import com.piotrcapecki.bakelivery.order.client.CatalogClient;
 import com.piotrcapecki.bakelivery.order.config.RabbitConfig;
@@ -12,15 +11,20 @@ import com.piotrcapecki.bakelivery.order.model.OrderItem;
 import com.piotrcapecki.bakelivery.order.model.OrderStatus;
 import com.piotrcapecki.bakelivery.order.repository.OrderRepository;
 import com.piotrcapecki.bakelivery.order.security.OrderPrincipal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +51,8 @@ public class OrderService {
                         bearerToken);
             } catch (HttpClientErrorException.NotFound e) {
                 throw new NotFoundException("Product not found: " + itemReq.productId());
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                throw new IllegalArgumentException("Catalog service error: " + e.getStatusCode());
             }
 
             if (!detail.product().active()) {
@@ -97,10 +103,12 @@ public class OrderService {
         try {
             saved = orderRepo.saveAndFlush(order);
         } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("Duplicate order");
+            return orderRepo.findByIdempotencyKey(idempotencyKey)
+                    .map(OrderResponse::of)
+                    .orElseThrow(() -> new IllegalArgumentException("Order conflict"));
         }
 
-        OrderPlacedEvent event = new OrderPlacedEvent(
+        final OrderPlacedEvent event = new OrderPlacedEvent(
                 saved.getId(),
                 saved.getBakeryId(),
                 saved.getCustomerId(),
@@ -108,17 +116,22 @@ public class OrderService {
                 saved.getDeliveryAddress(),
                 saved.getTotalAmount(),
                 saved.getItems().stream().map(OrderItemResponse::of).toList(),
-                LocalDateTime.now());
+                OffsetDateTime.now());
 
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_ORDER_PLACED, event);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_ORDER_PLACED, event);
+            }
+        });
 
         return OrderResponse.of(saved);
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> listForCustomer(UUID customerId, UUID bakeryId) {
-        return orderRepo.findAllByCustomerIdAndBakeryIdOrderByCreatedAtDesc(customerId, bakeryId)
-                .stream().map(OrderResponse::of).toList();
+    public Page<OrderResponse> listForCustomer(UUID customerId, UUID bakeryId, Pageable pageable) {
+        return orderRepo.findAllByCustomerIdAndBakeryIdOrderByCreatedAtDesc(customerId, bakeryId, pageable)
+                .map(OrderResponse::of);
     }
 
     @Transactional(readOnly = true)
@@ -129,9 +142,16 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponse> listForAdmin(UUID bakeryId) {
-        return orderRepo.findAllByBakeryIdOrderByCreatedAtDesc(bakeryId)
-                .stream().map(OrderResponse::of).toList();
+    public Page<OrderResponse> listForAdmin(UUID bakeryId, Pageable pageable) {
+        return orderRepo.findAllByBakeryIdOrderByCreatedAtDesc(bakeryId, pageable)
+                .map(OrderResponse::of);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getForAdmin(UUID id, UUID bakeryId) {
+        return OrderResponse.of(
+                orderRepo.findByIdAndBakeryId(id, bakeryId)
+                        .orElseThrow(() -> new NotFoundException("Order not found")));
     }
 
     @Transactional
