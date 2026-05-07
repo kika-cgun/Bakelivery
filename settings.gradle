@@ -11,3 +11,5 @@ include 'services:customer-service'
 project(':services:customer-service').projectDir = file('services/customer-service')
 include 'services:catalog-service'
 project(':services:catalog-service').projectDir = file('services/catalog-service')
+include 'services:maps-service'
+project(':services:maps-service').projectDir = file('services/maps-service')
