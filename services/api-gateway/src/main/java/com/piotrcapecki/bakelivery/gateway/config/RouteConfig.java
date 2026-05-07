@@ -1,6 +1,7 @@
 package com.piotrcapecki.bakelivery.gateway.config;
 
 import com.piotrcapecki.bakelivery.gateway.filter.JwtPropagationFilter;
+import com.piotrcapecki.bakelivery.gateway.filter.RateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
 import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
@@ -26,9 +27,11 @@ public class RouteConfig {
     private String orderServiceUri;
 
     private final JwtPropagationFilter jwtPropagationFilter;
+    private final RateLimitFilter rateLimitFilter;
 
-    public RouteConfig(JwtPropagationFilter jwtPropagationFilter) {
+    public RouteConfig(JwtPropagationFilter jwtPropagationFilter, RateLimitFilter rateLimitFilter) {
         this.jwtPropagationFilter = jwtPropagationFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -36,6 +39,7 @@ public class RouteConfig {
         return GatewayRouterFunctions.route("auth-service")
                 .path("/api/auth/**", builder -> builder
                         .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(authServiceUri))
                 )
                 .build();
@@ -46,6 +50,7 @@ public class RouteConfig {
         return GatewayRouterFunctions.route("customer-service")
                 .path("/api/customer/**", builder -> builder
                         .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(customerServiceUri))
                 )
                 .build();
@@ -56,6 +61,7 @@ public class RouteConfig {
         return GatewayRouterFunctions.route("catalog-service")
                 .path("/api/catalog/**", builder -> builder
                         .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(catalogServiceUri))
                 )
                 .build();

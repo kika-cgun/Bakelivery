@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
 
 gateway:
   routes:
@@ -19,6 +22,16 @@ gateway:
 jwt:
   secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
   access-ttl-millis: ${JWT_ACCESS_TTL:900000}
+
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  limits:
+    CUSTOMER: ${RL_CUSTOMER:60}
+    DRIVER: ${RL_DRIVER:200}
+    BAKERY_ADMIN: ${RL_BAKERY_ADMIN:120}
+    DISPATCHER: ${RL_DISPATCHER:120}
+    SUPER_ADMIN: ${RL_SUPER_ADMIN:300}
+    default: ${RL_DEFAULT:60}
 
 management:
   endpoints:

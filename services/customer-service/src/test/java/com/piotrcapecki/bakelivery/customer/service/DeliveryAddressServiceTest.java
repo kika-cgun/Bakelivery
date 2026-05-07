@@ -1,6 +1,7 @@
 package com.piotrcapecki.bakelivery.customer.service;
 
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
+import com.piotrcapecki.bakelivery.customer.client.MapsClient;
 import com.piotrcapecki.bakelivery.customer.dto.CreateAddressRequest;
 import com.piotrcapecki.bakelivery.customer.dto.UpdateAddressRequest;
 import com.piotrcapecki.bakelivery.customer.model.Customer;
@@ -28,6 +29,7 @@ class DeliveryAddressServiceTest {
 
     @Mock CustomerRepository customerRepository;
     @Mock DeliveryAddressRepository addressRepository;
+    @Mock MapsClient mapsClient;
     @InjectMocks DeliveryAddressService service;
 
     @Test
@@ -61,12 +63,47 @@ class DeliveryAddressServiceTest {
         when(customerRepository.findByUserIdAndBakeryId(uid, bid)).thenReturn(
                 Optional.of(Customer.builder().id(cid).userId(uid).bakeryId(bid).type(CustomerType.INDIVIDUAL).build()));
         when(addressRepository.save(any(DeliveryAddress.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mapsClient.geocode(any())).thenReturn(new MapsClient.GeocodeResult(52.229, 21.012, "Warszawa, PL", false));
 
         DeliveryAddress result = service.create(uid, bid, new CreateAddressRequest("Dom", "ul. Pierwsza 1", "00-001", "Warszawa", null, null));
 
         assertThat(result.getCustomerId()).isEqualTo(cid);
         assertThat(result.getBakeryId()).isEqualTo(bid);
         assertThat(result.getStreet()).isEqualTo("ul. Pierwsza 1");
+    }
+
+    @Test
+    void create_setsLatLonFromGeocoding() {
+        UUID uid = UUID.randomUUID();
+        UUID bid = UUID.randomUUID();
+        UUID cid = UUID.randomUUID();
+        when(customerRepository.findByUserIdAndBakeryId(uid, bid)).thenReturn(
+                Optional.of(Customer.builder().id(cid).userId(uid).bakeryId(bid).type(CustomerType.INDIVIDUAL).build()));
+        when(addressRepository.save(any(DeliveryAddress.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mapsClient.geocode(any())).thenReturn(new MapsClient.GeocodeResult(52.229, 21.012, "Warszawa, PL", false));
+
+        DeliveryAddress result = service.create(uid, bid, new CreateAddressRequest("Dom", "ul. Pierwsza 1", "00-001", "Warszawa", null, null));
+
+        assertThat(result.getLatitude()).isEqualTo(52.229);
+        assertThat(result.getLongitude()).isEqualTo(21.012);
+    }
+
+    @Test
+    void create_geocodingFails_saveAddressWithoutCoordinates() {
+        UUID uid = UUID.randomUUID();
+        UUID bid = UUID.randomUUID();
+        UUID cid = UUID.randomUUID();
+        when(customerRepository.findByUserIdAndBakeryId(uid, bid)).thenReturn(
+                Optional.of(Customer.builder().id(cid).userId(uid).bakeryId(bid).type(CustomerType.INDIVIDUAL).build()));
+        when(addressRepository.save(any(DeliveryAddress.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mapsClient.geocode(any())).thenThrow(new RuntimeException("maps-service unavailable"));
+
+        DeliveryAddress result = service.create(uid, bid, new CreateAddressRequest("Dom", "ul. Pierwsza 1", "00-001", "Warszawa", null, null));
+
+        assertThat(result.getCustomerId()).isEqualTo(cid);
+        assertThat(result.getLatitude()).isNull();
+        assertThat(result.getLongitude()).isNull();
+        verify(addressRepository).save(any(DeliveryAddress.class));
     }
 
     @Test

@@ -1,0 +1,33 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: maps-service
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2000ms
+
+jwt:
+  secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
+  access-ttl-millis: ${JWT_ACCESS_TTL:900000}
+
+maps:
+  osrm:
+    url: ${OSRM_URL:http://localhost:5000}
+    timeout-ms: ${OSRM_TIMEOUT_MS:5000}
+  nominatim:
+    url: ${NOMINATIM_URL:https://nominatim.openstreetmap.org}
+    timeout-ms: ${NOMINATIM_TIMEOUT_MS:3000}
+    user-agent: ${NOMINATIM_USER_AGENT:bakelivery-dev/1.0}
+
+cache:
+  geocoding-ttl-days: ${CACHE_GEOCODING_TTL_DAYS:30}
+  matrix-ttl-hours: ${CACHE_MATRIX_TTL_HOURS:24}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
