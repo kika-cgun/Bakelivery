@@ -35,8 +35,8 @@ public class RouteConfig {
     public RouterFunction<ServerResponse> authServiceRoute() {
         return GatewayRouterFunctions.route("auth-service")
                 .path("/api/auth/**", builder -> builder
-                        .filter(rateLimitFilter)
                         .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(authServiceUri))
                 )
                 .build();
@@ -46,8 +46,8 @@ public class RouteConfig {
     public RouterFunction<ServerResponse> customerServiceRoute() {
         return GatewayRouterFunctions.route("customer-service")
                 .path("/api/customer/**", builder -> builder
-                        .filter(rateLimitFilter)
                         .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(customerServiceUri))
                 )
                 .build();
@@ -57,8 +57,8 @@ public class RouteConfig {
     public RouterFunction<ServerResponse> catalogServiceRoute() {
         return GatewayRouterFunctions.route("catalog-service")
                 .path("/api/catalog/**", builder -> builder
-                        .filter(rateLimitFilter)
                         .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(catalogServiceUri))
                 )
                 .build();
