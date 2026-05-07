@@ -42,6 +42,8 @@ services:
         condition: service_healthy
       catalog-service:
         condition: service_healthy
+      order-service:
+        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
@@ -49,6 +51,7 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8081
       CUSTOMER_SERVICE_URL: http://customer-service:8082
       CATALOG_SERVICE_URL: http://catalog-service:8083
+      ORDER_SERVICE_URL: http://order-service:8084
       REDIS_URL: redis://redis:6379
     ports: ["8080:8080"]
 
@@ -142,9 +145,128 @@ services:
       retries: 10
       start_period: 30s
 
-  # ─── Faza 4: RabbitMQ + Mailpit ────────────────────────────────
-  # rabbitmq: ...
-  # mailpit: ...
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: ["5672:5672", "15672:15672"]
+    volumes: ["rabbitmq-data:/var/lib/rabbitmq"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["1025:1025", "8025:8025"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8025/api/v1/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-order:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bakelivery_order
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5436:5432"]
+    volumes: ["pg-order-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bakelivery_order"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  postgres-invoice:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bakelivery_invoice
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5437:5432"]
+    volumes: ["pg-invoice-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bakelivery_invoice"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  order-service:
+    build:
+      context: ..
+      dockerfile: services/order-service/Dockerfile
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      catalog-service:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres-order:5432/bakelivery_order
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      CATALOG_SERVICE_URL: http://catalog-service:8083
+    ports: ["8084:8084"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  notification-service:
+    build:
+      context: ../services/notification-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    ports: ["8090:8090"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  invoice-service:
+    build:
+      context: ..
+      dockerfile: services/invoice-service/Dockerfile
+    depends_on:
+      postgres-invoice:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres-invoice:5432/bakelivery_invoice
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      MINIO_BUCKET: bakelivery-invoices
+    ports: ["8091:8091"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8091/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
   # ─── Faza 5: Redis + OSRM + maps-service ───────────────────────
   redis:
@@ -189,6 +311,9 @@ volumes:
   pg-auth-data:
   pg-customer-data:
   pg-catalog-data:
+  pg-order-data:
+  pg-invoice-data:
   minio-data:
+  rabbitmq-data:
   redis-data:
   osrm-data:
