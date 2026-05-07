@@ -26,6 +26,9 @@ public class RouteConfig {
     @Value("${gateway.routes.order-service.uri:http://localhost:8084}")
     private String orderServiceUri;
 
+    @Value("${gateway.routes.dispatching-service.uri:http://localhost:8085}")
+    private String dispatchingServiceUri;
+
     private final JwtPropagationFilter jwtPropagationFilter;
     private final RateLimitFilter rateLimitFilter;
 
@@ -73,6 +76,16 @@ public class RouteConfig {
                 .path("/api/orders/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(orderServiceUri))
+                )
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> dispatchingServiceRoute() {
+        return GatewayRouterFunctions.route("dispatching-service")
+                .path("/api/dispatch/**", builder -> builder
+                        .filter(jwtPropagationFilter)
+                        .route(RequestPredicates.all(), HandlerFunctions.http(dispatchingServiceUri))
                 )
                 .build();
     }

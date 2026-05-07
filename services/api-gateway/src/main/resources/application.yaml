@@ -18,6 +18,8 @@ gateway:
       uri: ${CATALOG_SERVICE_URL:http://localhost:8083}
     order-service:
       uri: ${ORDER_SERVICE_URL:http://localhost:8084}
+    dispatching-service:
+      uri: ${DISPATCHING_SERVICE_URL:http://localhost:8085}
 
 jwt:
   secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
