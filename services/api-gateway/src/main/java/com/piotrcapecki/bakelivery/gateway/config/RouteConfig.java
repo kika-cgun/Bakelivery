@@ -22,6 +22,9 @@ public class RouteConfig {
     @Value("${gateway.routes.catalog-service.uri:http://localhost:8083}")
     private String catalogServiceUri;
 
+    @Value("${gateway.routes.order-service.uri:http://localhost:8084}")
+    private String orderServiceUri;
+
     private final JwtPropagationFilter jwtPropagationFilter;
 
     public RouteConfig(JwtPropagationFilter jwtPropagationFilter) {
@@ -54,6 +57,16 @@ public class RouteConfig {
                 .path("/api/catalog/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(catalogServiceUri))
+                )
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> orderServiceRoute() {
+        return GatewayRouterFunctions.route("order-service")
+                .path("/api/orders/**", builder -> builder
+                        .filter(jwtPropagationFilter)
+                        .route(RequestPredicates.all(), HandlerFunctions.http(orderServiceUri))
                 )
                 .build();
     }
