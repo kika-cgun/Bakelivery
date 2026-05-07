@@ -20,19 +20,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String userId = request.getHeader("X-User-Id");
+        String userIdStr = request.getHeader("X-User-Id");
         String role = request.getHeader("X-Role");
         String bakeryIdStr = request.getHeader("X-Bakery-Id");
 
-        if (userId != null && role != null) {
-            UUID bakeryId = bakeryIdStr != null ? UUID.fromString(bakeryIdStr) : null;
-            MapsPrincipal principal = new MapsPrincipal(
-                UUID.fromString(userId), null, bakeryId, role
-            );
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
-            );
-            SecurityContextHolder.getContext().setAuthentication(auth);
+        if (userIdStr != null && role != null) {
+            try {
+                UUID userId = UUID.fromString(userIdStr);
+                UUID bakeryId = bakeryIdStr != null ? UUID.fromString(bakeryIdStr) : null;
+                MapsPrincipal principal = new MapsPrincipal(userId, null, bakeryId, role);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                );
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (IllegalArgumentException ignored) {
+                // Malformed UUID header — proceed unauthenticated, security chain will reject
+            }
         }
         filterChain.doFilter(request, response);
     }

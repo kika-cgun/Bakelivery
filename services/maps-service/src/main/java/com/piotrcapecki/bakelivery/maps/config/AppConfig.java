@@ -1,6 +1,5 @@
 package com.piotrcapecki.bakelivery.maps.config;
 
-import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,12 +7,6 @@ import org.springframework.web.client.RestClient;
 
 @Configuration
 public class AppConfig {
-
-    @Value("${jwt.secret}")
-    private String jwtSecret;
-
-    @Value("${jwt.access-ttl-millis}")
-    private long jwtAccessTtlMillis;
 
     @Value("${maps.osrm.url}")
     private String osrmUrl;
@@ -23,11 +16,6 @@ public class AppConfig {
 
     @Value("${maps.nominatim.user-agent:bakelivery/1.0}")
     private String nominatimUserAgent;
-
-    @Bean
-    public JwtUtil jwtUtil() {
-        return new JwtUtil(jwtSecret, jwtAccessTtlMillis);
-    }
 
     @Bean
     public JwtAuthFilter jwtAuthFilter() {
