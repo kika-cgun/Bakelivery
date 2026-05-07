@@ -1,7 +1,6 @@
 package com.piotrcapecki.bakelivery.dispatching.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.piotrcapecki.bakelivery.common.exception.NotFoundException;
 import com.piotrcapecki.bakelivery.dispatching.config.AppConfig;
 import com.piotrcapecki.bakelivery.dispatching.dto.AssignDriverRequest;
@@ -43,9 +42,9 @@ class DispatchStopControllerTest {
     @Autowired WebApplicationContext webApplicationContext;
     @MockitoBean DispatchStopService service;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private MockMvc mockMvc;
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
 
     @BeforeEach
     void setup() {
