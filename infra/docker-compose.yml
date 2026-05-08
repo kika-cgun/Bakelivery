@@ -389,6 +389,51 @@ services:
       retries: 10
       start_period: 30s
 
+  postgres-driver-ops:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bakelivery_driver_ops
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5440:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  driver-ops-service:
+    build:
+      context: ./services/driver-ops-service
+    ports:
+      - "8087:8087"
+    environment:
+      DB_URL: jdbc:postgresql://postgres-driver-ops:5432/bakelivery_driver_ops
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+      ROUTING_SERVICE_URL: http://routing-service:8086
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio12345
+      JWT_SECRET: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5
+    depends_on:
+      postgres-driver-ops:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      routing-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   pg-auth-data:
   pg-customer-data:
@@ -397,6 +442,7 @@ volumes:
   pg-invoice-data:
   pg-dispatch-data:
   pg-routing-data:
+  pg-driver-ops-data:
   minio-data:
   rabbitmq-data:
   redis-data:

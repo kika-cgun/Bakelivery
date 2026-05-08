@@ -32,6 +32,9 @@ public class RouteConfig {
     @Value("${gateway.routes.routing-service.uri:http://localhost:8086}")
     private String routingServiceUri;
 
+    @Value("${gateway.routes.driver-ops-service.uri:http://localhost:8087}")
+    private String driverOpsServiceUri;
+
     private final JwtPropagationFilter jwtPropagationFilter;
     private final RateLimitFilter rateLimitFilter;
 
@@ -99,6 +102,16 @@ public class RouteConfig {
                 .path("/api/routing/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(routingServiceUri))
+                )
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> driverOpsServiceRoute() {
+        return GatewayRouterFunctions.route("driver-ops-service")
+                .path("/api/driver-ops/**", builder -> builder
+                        .filter(jwtPropagationFilter)
+                        .route(RequestPredicates.all(), HandlerFunctions.http(driverOpsServiceUri))
                 )
                 .build();
     }
