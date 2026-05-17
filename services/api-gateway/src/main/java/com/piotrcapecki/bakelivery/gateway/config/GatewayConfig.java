@@ -1,6 +1,7 @@
 package com.piotrcapecki.bakelivery.gateway.config;
 
 import com.piotrcapecki.bakelivery.common.jwt.JwtUtil;
+import com.piotrcapecki.bakelivery.gateway.filter.JwtPropagationFilter;
 import com.piotrcapecki.bakelivery.gateway.filter.SecurityHeadersFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,5 +28,10 @@ public class GatewayConfig implements WebMvcConfigurer {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-ttl-millis}") long accessTtlMillis) {
         return new JwtUtil(secret, accessTtlMillis);
+    }
+
+    @Bean
+    public JwtPropagationFilter jwtPropagationFilter(JwtUtil jwtUtil) {
+        return new JwtPropagationFilter(jwtUtil);
     }
 }
