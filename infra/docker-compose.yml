@@ -406,7 +406,7 @@ services:
 
   driver-ops-service:
     build:
-      context: ./services/driver-ops-service
+      context: ../services/driver-ops-service
     ports:
       - "8087:8087"
     environment:
