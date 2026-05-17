@@ -15,7 +15,8 @@ services:
 
   auth-service:
     build:
-      context: ../services/auth-service
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -34,7 +35,8 @@ services:
 
   api-gateway:
     build:
-      context: ../services/api-gateway
+      context: ..
+      dockerfile: services/api-gateway/Dockerfile
     depends_on:
       auth-service:
         condition: service_healthy
@@ -75,7 +77,8 @@ services:
 
   customer-service:
     build:
-      context: ../services/customer-service
+      context: ..
+      dockerfile: services/customer-service/Dockerfile
     depends_on:
       postgres-customer:
         condition: service_healthy
@@ -226,7 +229,8 @@ services:
 
   notification-service:
     build:
-      context: ../services/notification-service
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -293,7 +297,8 @@ services:
 
   maps-service:
     build:
-      context: ../services/maps-service
+      context: ..
+      dockerfile: services/maps-service/Dockerfile
     depends_on:
       redis:
         condition: service_healthy
@@ -327,7 +332,8 @@ services:
 
   dispatching-service:
     build:
-      context: ../services/dispatching-service
+      context: ..
+      dockerfile: services/dispatching-service/Dockerfile
     depends_on:
       postgres-dispatch:
         condition: service_healthy
@@ -406,7 +412,8 @@ services:
 
   driver-ops-service:
     build:
-      context: ../services/driver-ops-service
+      context: ..
+      dockerfile: services/driver-ops-service/Dockerfile
     ports:
       - "8087:8087"
     environment:
@@ -452,7 +459,8 @@ services:
 
   messaging-service:
     build:
-      context: ../services/messaging-service
+      context: ..
+      dockerfile: services/messaging-service/Dockerfile
     depends_on:
       postgres-messaging:
         condition: service_healthy
@@ -482,7 +490,8 @@ services:
   # ─── Faza 9: realtime-service (WebSocket, no DB) ───────────────
   realtime-service:
     build:
-      context: ../services/realtime-service
+      context: ..
+      dockerfile: services/realtime-service/Dockerfile
     depends_on:
       redis:
         condition: service_healthy

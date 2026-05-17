@@ -1,7 +1,7 @@
 package com.piotrcapecki.bakelivery.gateway.filter;
 
+import com.piotrcapecki.bakelivery.gateway.config.RateLimitProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.HandlerFilterFunction;
@@ -22,16 +22,11 @@ public class RateLimitFilter implements HandlerFilterFunction<ServerResponse, Se
     private final Map<String, Integer> limits;
     private final int defaultLimit;
 
-    public RateLimitFilter(
-        StringRedisTemplate redis,
-        @Value("${rate-limit.enabled:true}") boolean enabled,
-        @Value("#{${rate-limit.limits}}") Map<String, Integer> limits,
-        @Value("${rate-limit.limits.default:60}") int defaultLimit
-    ) {
+    public RateLimitFilter(StringRedisTemplate redis, RateLimitProperties properties) {
         this.redis = redis;
-        this.enabled = enabled;
-        this.limits = limits;
-        this.defaultLimit = defaultLimit;
+        this.enabled = properties.isEnabled();
+        this.limits = properties.getLimits();
+        this.defaultLimit = properties.getLimits().getOrDefault("default", 60);
     }
 
     @Override

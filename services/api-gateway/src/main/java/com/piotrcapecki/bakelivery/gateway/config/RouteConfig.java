@@ -3,13 +3,15 @@ package com.piotrcapecki.bakelivery.gateway.config;
 import com.piotrcapecki.bakelivery.gateway.filter.JwtPropagationFilter;
 import com.piotrcapecki.bakelivery.gateway.filter.RateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
-import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RequestPredicates;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
+
+import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFunctions.uri;
+import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
+import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
 
 @Configuration
 public class RouteConfig {
@@ -48,85 +50,93 @@ public class RouteConfig {
 
     @Bean
     public RouterFunction<ServerResponse> authServiceRoute() {
-        return GatewayRouterFunctions.route("auth-service")
+        return route("auth-service")
                 .path("/api/auth/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .filter(rateLimitFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(authServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(authServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> customerServiceRoute() {
-        return GatewayRouterFunctions.route("customer-service")
+        return route("customer-service")
                 .path("/api/customer/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .filter(rateLimitFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(customerServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(customerServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> catalogServiceRoute() {
-        return GatewayRouterFunctions.route("catalog-service")
+        return route("catalog-service")
                 .path("/api/catalog/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .filter(rateLimitFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(catalogServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(catalogServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> orderServiceRoute() {
-        return GatewayRouterFunctions.route("order-service")
+        return route("order-service")
                 .path("/api/orders/**", builder -> builder
                         .filter(jwtPropagationFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(orderServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(orderServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> dispatchingServiceRoute() {
-        return GatewayRouterFunctions.route("dispatching-service")
+        return route("dispatching-service")
                 .path("/api/dispatch/**", builder -> builder
                         .filter(jwtPropagationFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(dispatchingServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(dispatchingServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> routingServiceRoute() {
-        return GatewayRouterFunctions.route("routing-service")
+        return route("routing-service")
                 .path("/api/routing/**", builder -> builder
                         .filter(jwtPropagationFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(routingServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(routingServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> driverOpsServiceRoute() {
-        return GatewayRouterFunctions.route("driver-ops-service")
+        return route("driver-ops-service")
                 .path("/api/driver-ops/**", builder -> builder
                         .filter(jwtPropagationFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(driverOpsServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(driverOpsServiceUri))
                 .build();
     }
 
     @Bean
     public RouterFunction<ServerResponse> messagingServiceRoute() {
-        return GatewayRouterFunctions.route("messaging-service")
+        return route("messaging-service")
                 .path("/api/messaging/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .filter(rateLimitFilter)
-                        .route(RequestPredicates.all(), HandlerFunctions.http(messagingServiceUri))
+                        .route(RequestPredicates.all(), http())
                 )
+                .before(uri(messagingServiceUri))
                 .build();
     }
 }
