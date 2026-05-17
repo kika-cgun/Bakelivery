@@ -1,0 +1,60 @@
+/* Bakelivery Design Tokens — Warm Minimal */
+@import url('https://fonts.googleapis.com/css2?family=Calistoga:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Brand */
+  --primary:        #d97706;
+  --primary-hover:  #b45309;
+  --primary-fg:     #ffffff;
+  --accent:         #2563eb;
+  --accent-fg:      #ffffff;
+
+  /* Surfaces */
+  --bg:             #FFF7ED;
+  --card:           #ffffff;
+  --muted:          #FDF4F0;
+  --sidebar-bg:     #0f172a;
+
+  /* Foregrounds */
+  --fg:             #0F172A;
+  --muted-fg:       #64748B;
+  --sidebar-fg:     #94a3b8;
+  --sidebar-active: #fbbf24;
+
+  /* Borders */
+  --border:         #FCEAE1;
+  --border-strong:  #fcd9b6;
+
+  /* Semantic */
+  --success:        #10b981;
+  --success-bg:     #dcfce7;
+  --success-fg:     #065f46;
+  --warning:        #f59e0b;
+  --warning-bg:     #fef3c7;
+  --warning-fg:     #92400e;
+  --destructive:    #DC2626;
+  --destructive-bg: #fee2e2;
+  --destructive-fg: #991b1b;
+
+  /* Typography */
+  --font-display: 'Calistoga', serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Radius */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 4px rgba(0,0,0,.06);
+  --shadow-md:  0 2px 10px rgba(0,0,0,.08);
+  --shadow-lg:  0 4px 20px rgba(0,0,0,.10);
+  --shadow-primary: 0 4px 14px rgba(217,119,6,.30);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-out;
+  --transition-base: 220ms ease-out;
+}

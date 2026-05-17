@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #FFF7ED;
+    color: #0F172A;
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    outline: 2px solid #d97706;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Leaflet override */
+  .leaflet-container {
+    border-radius: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-display { font-family: 'Calistoga', serif; }
+  .font-mono    { font-family: 'JetBrains Mono', monospace; }
+
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+}

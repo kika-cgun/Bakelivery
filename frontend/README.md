@@ -1,16 +1,36 @@
-# React + Vite
+# Bakelivery — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dwie niezależne aplikacje Vite + React 19 + TypeScript + Tailwind CSS.
 
-Currently, two official plugins are available:
+## Struktura
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+frontend/
+├── shop/          # Sklep klienta (port 5173)
+├── ops/           # Panel operacyjny — piekarz/kierowca/dyspozytor (port 5174)
+└── packages/ui/   # Wspólne: typy, API hooki, utils, tokeny
+```
 
-## React Compiler
+## Start (dev)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Sklep
+cd shop && npm install && npm run dev
 
-## Expanding the ESLint configuration
+# Ops panel
+cd ops && npm install && npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Backend (api-gateway) musi działać na `:8080`, realtime-service na `:8092`.
+
+## Stack
+
+- React 19 + Vite 6 + TypeScript 5.7 (strict)
+- Tailwind CSS 3 · TanStack Query v5 · Zustand v5
+- React Router v7 · Lucide React · React Leaflet
+
+## Design
+
+**Warm Minimal** — amber `#d97706`, background `#FFF7ED`, Calistoga + Inter + JetBrains Mono.
+
+Szczegóły: `docs/superpowers/specs/2026-05-17-frontend-design.md`
