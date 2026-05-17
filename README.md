@@ -4,36 +4,29 @@ Multi-tenant bakery delivery platform built with Spring Boot 4 microservices.
 
 ## Architecture
 
-```
-                         ┌─────────────────────────────────────────────────────────────────┐
-                         │                          Clients                                 │
-                         │               (Browser / Mobile / Partner API)                  │
-                         └────────────────────────────┬────────────────────────────────────┘
-                                                      │
-                                          ┌───────────▼───────────┐
-                                          │     api-gateway :8080  │
-                                          │  JWT validation        │
-                                          │  X-Request-Id inject   │
-                                          │  Security headers      │
-                                          └──┬──┬──┬──┬──┬──┬──┬──┘
-               ┌──────────────┬─────────────┘  │  │  │  │  │  │
-               ▼              ▼                 ▼  │  │  │  │  │
-    auth-service:8081  customer-service:8082       │  │  │  │  │
-                                          catalog-service:8083   │
-                                               order-service:8084│
-                                         dispatching-service:8085│
-                                           routing-service:8086  │
-                                         driver-ops-service:8087 │
-                                          messaging-service:8088 │
-                                             maps-service:8089   │
-                                     notification-service:8090   │
-                                          invoice-service:8091   │
-                                         realtime-service:8092   │
-                                                                 │
-            ┌────────────────────────────────────────────────────┘
-            │                  Infrastructure
-            │   PostgreSQL ×9 · RabbitMQ · Redis · MinIO · Mailpit
-            └────────────────────────────────────────────────────
+```mermaid
+graph TD
+    C["Clients<br/>(Browser / Mobile / Partner API)"]
+    GW["<b>api-gateway</b> :8080<br/>JWT validation · X-Request-Id · Security headers"]
+
+    C --> GW
+
+    GW --> A["auth-service :8081"]
+    GW --> CU["customer-service :8082"]
+    GW --> CA["catalog-service :8083"]
+    GW --> O["order-service :8084"]
+    GW --> D["dispatching-service :8085"]
+    GW --> R["routing-service :8086"]
+    GW --> DO["driver-ops-service :8087"]
+    GW --> M["messaging-service :8088"]
+    GW --> MA["maps-service :8089"]
+    GW --> N["notification-service :8090"]
+    GW --> I["invoice-service :8091"]
+    GW --> RT["realtime-service :8092"]
+
+    INFRA["PostgreSQL ×9 · RabbitMQ · Redis · MinIO · Mailpit"]
+
+    A & CU & CA & O & D & R & DO & M & MA & N & I & RT --- INFRA
 ```
 
 ## Service Port Reference
@@ -104,17 +97,3 @@ Open Grafana at http://localhost:3000 (admin/admin), Zipkin at http://localhost:
 | `ZIPKIN_URL`               | `http://localhost:9411`              | all services       |
 | `GOOGLE_MAPS_API_KEY`      | (required in prod)                   | maps-service       |
 
-## Phase Feature List
-
-| Phase | Feature                                                                  |
-|-------|--------------------------------------------------------------------------|
-| 1     | Foundation: Gradle monorepo, Docker Compose infra, bakelivery-common lib |
-| 2     | Auth: JWT issue/refresh, login, register (auth-service)                  |
-| 3     | Customers: CRUD with bakery scoping (customer-service)                   |
-| 4     | Catalog: products, categories, images via MinIO (catalog-service)        |
-| 5     | Maps: geocoding, distance matrix, route planning (maps-service)          |
-| 6     | Orders: lifecycle state machine, order items (order-service)             |
-| 7     | Dispatching & Routing: assign drivers, optimise routes                   |
-| 8     | Driver Ops, Messaging, Notifications: real-time comms, push, email       |
-| 9     | Invoicing & Realtime: PDF invoices, WebSocket live tracking              |
-| 10    | Hardening: structured logging, tracing, Prometheus, Grafana, CI/CD, HA   |
