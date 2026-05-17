@@ -31,7 +31,7 @@ function PrivateRoute({
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     // Redirect to the user's correct view
-    if (role === 'BAKERY')      return <Navigate to="/bakery/orders" replace />;
+    if (role === 'BAKERY_ADMIN')      return <Navigate to="/bakery/orders" replace />;
     if (role === 'DRIVER')      return <Navigate to="/driver/deliveries" replace />;
     if (role === 'DISPATCHER')  return <Navigate to="/dispatcher/map" replace />;
     return <Navigate to="/" replace />;
@@ -49,9 +49,9 @@ export default function App() {
 
           {/* Bakery */}
           <Route path="/bakery/orders"
-            element={<PrivateRoute allowedRoles={['BAKERY']}><OrdersPage /></PrivateRoute>} />
+            element={<PrivateRoute allowedRoles={['BAKERY_ADMIN']}><OrdersPage /></PrivateRoute>} />
           <Route path="/bakery/catalog"
-            element={<PrivateRoute allowedRoles={['BAKERY']}><BakeryCatalog /></PrivateRoute>} />
+            element={<PrivateRoute allowedRoles={['BAKERY_ADMIN']}><BakeryCatalog /></PrivateRoute>} />
 
           {/* Driver */}
           <Route path="/driver/deliveries"

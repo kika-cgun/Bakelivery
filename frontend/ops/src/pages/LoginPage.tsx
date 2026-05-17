@@ -5,10 +5,10 @@ import { useLogin } from '@ui/api/auth';
 import { useAuthStore } from '@/store/auth';
 import type { Role } from '@ui/types';
 
-const OPS_ROLES: Role[] = ['BAKERY', 'DRIVER', 'DISPATCHER', 'ADMIN'];
+const OPS_ROLES: Role[] = ['BAKERY_ADMIN', 'DRIVER', 'DISPATCHER', 'SUPER_ADMIN'];
 
 function roleRedirect(role: Role): string {
-  if (role === 'BAKERY') return '/bakery/orders';
+  if (role === 'BAKERY_ADMIN') return '/bakery/orders';
   if (role === 'DRIVER') return '/driver/deliveries';
   if (role === 'DISPATCHER') return '/dispatcher/map';
   return '/';

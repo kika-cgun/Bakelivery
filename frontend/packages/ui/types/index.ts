@@ -1,6 +1,6 @@
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
-export type Role = 'CUSTOMER' | 'BAKERY' | 'DRIVER' | 'DISPATCHER' | 'ADMIN';
+export type Role = 'CUSTOMER' | 'BAKERY_ADMIN' | 'DRIVER' | 'DISPATCHER' | 'SUPER_ADMIN';
 
 export interface AuthResponse {
   token: string;

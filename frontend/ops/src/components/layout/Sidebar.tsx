@@ -43,15 +43,17 @@ interface SidebarProps {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  BAKERY: 'PIEKARNIA',
+  BAKERY_ADMIN: 'PIEKARNIA',
   DRIVER: 'KIEROWCA',
   DISPATCHER: 'DYSPOZYTOR',
+  SUPER_ADMIN: 'ADMIN',
 };
 
 const SECTION_LABELS: Record<string, string> = {
-  BAKERY: 'Piekarnia',
+  BAKERY_ADMIN: 'Piekarnia',
   DRIVER: 'Kierowca',
   DISPATCHER: 'Dyspozytor',
+  SUPER_ADMIN: 'Admin',
 };
 
 function BakeryNav() {
@@ -128,7 +130,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             <p className="px-3 mb-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-600">
               {SECTION_LABELS[role] ?? role}
             </p>
-            {role === 'BAKERY' && <BakeryNav />}
+            {role === 'BAKERY_ADMIN' && <BakeryNav />}
             {role === 'DRIVER' && <DriverNav />}
             {role === 'DISPATCHER' && <DispatcherNav />}
           </>
