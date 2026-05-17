@@ -1,6 +1,7 @@
 package com.piotrcapecki.bakelivery.common.logging;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -11,6 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MdcLoggingInterceptorTest {
 
     private final MdcLoggingInterceptor interceptor = new MdcLoggingInterceptor();
+
+    @AfterEach
+    void clearMdc() {
+        MDC.clear();
+    }
 
     @Test
     void preHandle_populatesMdcFromHeaders() throws Exception {
