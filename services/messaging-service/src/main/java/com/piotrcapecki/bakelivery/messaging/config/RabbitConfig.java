@@ -45,6 +45,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", QUEUE_DISPATCH_ASSIGNED + ".dlq")
+                .quorum()
                 .build();
     }
 
@@ -53,17 +54,18 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_DELIVERY_COMPLETED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", QUEUE_DELIVERY_COMPLETED + ".dlq")
+                .quorum()
                 .build();
     }
 
     @Bean
     public Queue dispatchAssignedDlq() {
-        return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED + ".dlq").build();
+        return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED + ".dlq").quorum().build();
     }
 
     @Bean
     public Queue deliveryCompletedDlq() {
-        return QueueBuilder.durable(QUEUE_DELIVERY_COMPLETED + ".dlq").build();
+        return QueueBuilder.durable(QUEUE_DELIVERY_COMPLETED + ".dlq").quorum().build();
     }
 
     @Bean

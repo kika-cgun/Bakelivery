@@ -31,12 +31,13 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_ORDER_PLACED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_ORDER_PLACED)
+                .quorum()
                 .build();
     }
 
     @Bean
     public Queue orderPlacedDlq() {
-        return QueueBuilder.durable(DLQ_ORDER_PLACED).build();
+        return QueueBuilder.durable(DLQ_ORDER_PLACED).quorum().build();
     }
 
     @Bean

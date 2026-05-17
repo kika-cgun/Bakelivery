@@ -42,12 +42,13 @@ public class RabbitConfig {
         return QueueBuilder.durable(ROUTE_UPDATED_QUEUE)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", ROUTE_UPDATED_DLQ)
+                .quorum()
                 .build();
     }
 
     @Bean
     public Queue routeUpdatedDlq() {
-        return QueueBuilder.durable(ROUTE_UPDATED_DLQ).build();
+        return QueueBuilder.durable(ROUTE_UPDATED_DLQ).quorum().build();
     }
 
     @Bean

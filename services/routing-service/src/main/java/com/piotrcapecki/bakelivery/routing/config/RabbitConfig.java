@@ -39,6 +39,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_OPTIMIZE)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_OPTIMIZE)
+                .quorum()
                 .build();
     }
 
@@ -47,14 +48,15 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_DISPATCH)
+                .quorum()
                 .build();
     }
 
     @Bean
-    Queue dlqOptimize() { return QueueBuilder.durable(DLQ_OPTIMIZE).build(); }
+    Queue dlqOptimize() { return QueueBuilder.durable(DLQ_OPTIMIZE).quorum().build(); }
 
     @Bean
-    Queue dlqDispatch() { return QueueBuilder.durable(DLQ_DISPATCH).build(); }
+    Queue dlqDispatch() { return QueueBuilder.durable(DLQ_DISPATCH).quorum().build(); }
 
     @Bean
     Binding optimizeBinding(Queue routingOptimizeQueue, DirectExchange routingDirect) {

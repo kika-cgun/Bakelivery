@@ -33,6 +33,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_NOTIFICATION)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_NOTIFICATION)
+                .quorum()
                 .build();
     }
 
@@ -41,17 +42,18 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_INVOICE)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_INVOICE)
+                .quorum()
                 .build();
     }
 
     @Bean
     public Queue dlqNotification() {
-        return QueueBuilder.durable(DLQ_NOTIFICATION).build();
+        return QueueBuilder.durable(DLQ_NOTIFICATION).quorum().build();
     }
 
     @Bean
     public Queue dlqInvoice() {
-        return QueueBuilder.durable(DLQ_INVOICE).build();
+        return QueueBuilder.durable(DLQ_INVOICE).quorum().build();
     }
 
     @Bean

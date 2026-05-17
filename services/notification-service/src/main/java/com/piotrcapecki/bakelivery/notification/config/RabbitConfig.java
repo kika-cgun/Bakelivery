@@ -16,6 +16,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_NOTIFICATION)
                 .withArgument("x-dead-letter-exchange", "bakelivery.dlx")
                 .withArgument("x-dead-letter-routing-key", "dlq.notification")
+                .quorum()
                 .build();
     }
 
