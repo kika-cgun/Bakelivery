@@ -1,0 +1,20 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: realtime-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+jwt:
+  secret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBiYWtlbGl2ZXJ5}
+  access-ttl-millis: ${JWT_ACCESS_TTL:900000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

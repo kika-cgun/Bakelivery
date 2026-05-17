@@ -27,3 +27,5 @@ include 'services:driver-ops-service'
 project(':services:driver-ops-service').projectDir = file('services/driver-ops-service')
 include 'services:messaging-service'
 project(':services:messaging-service').projectDir = file('services/messaging-service')
+include 'services:realtime-service'
+project(':services:realtime-service').projectDir = file('services/realtime-service')
