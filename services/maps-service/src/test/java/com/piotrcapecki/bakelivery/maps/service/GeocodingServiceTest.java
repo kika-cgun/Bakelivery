@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.*;
 
+@Tag("integration")
 @SpringBootTest
 @Testcontainers
 class GeocodingServiceTest {

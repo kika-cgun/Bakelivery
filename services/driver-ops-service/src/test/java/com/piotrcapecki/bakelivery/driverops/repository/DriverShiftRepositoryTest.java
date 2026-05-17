@@ -2,7 +2,9 @@ package com.piotrcapecki.bakelivery.driverops.repository;
 
 import com.piotrcapecki.bakelivery.driverops.domain.DriverShift;
 import com.piotrcapecki.bakelivery.driverops.domain.ShiftStatus;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +29,7 @@ class DriverShiftRepositoryTest {
     @Autowired
     DriverShiftRepository repository;
 
+    @MockitoBean ConnectionFactory connectionFactory;
     @MockitoBean RabbitTemplate rabbitTemplate;
     @MockitoBean S3Client s3Client;
     @MockitoBean S3Presigner s3Presigner;

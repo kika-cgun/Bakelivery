@@ -13,6 +13,7 @@ import com.piotrcapecki.bakelivery.driverops.service.ShiftService;
 import com.piotrcapecki.bakelivery.driverops.service.StopProgressService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +52,7 @@ class DriverOpsControllerTest {
     @Autowired
     WebApplicationContext context;
 
+    @MockitoBean ConnectionFactory connectionFactory;
     @MockitoBean ShiftService shiftService;
     @MockitoBean StopProgressService stopProgressService;
     @MockitoBean ProofOfDeliveryService proofService;
