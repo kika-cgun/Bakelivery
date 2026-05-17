@@ -509,6 +509,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # ─── Observability: Prometheus ─────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v3.0.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy | grep -q 'Healthy'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pg-auth-data:
   pg-customer-data:
