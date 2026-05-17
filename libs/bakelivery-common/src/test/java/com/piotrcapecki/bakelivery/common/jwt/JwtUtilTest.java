@@ -52,12 +52,17 @@ class JwtUtilTest {
     void parse_throwsForTamperedToken() {
         UUID userId = UUID.randomUUID();
         String token = jwt.generateAccessToken(new JwtClaims("a@b.com", userId, null, "SUPER_ADMIN"));
-        String tampered = token.substring(0, token.length() - 1) + (token.endsWith("a") ? "b" : "a");
+        // Corrupt the FIRST character of the signature part (full 6-bit group, always changes
+        // decoded bytes). Changing the last character is unreliable: a 32-byte HMAC-SHA256
+        // signature encodes to 43 Base64URL chars where the last char has only 4 significant
+        // bits — flipping a padding bit leaves decoded bytes identical and the signature valid.
+        String[] parts = token.split("\\.");
+        String sig = parts[2];
+        char corrupted = (sig.charAt(0) == 'a') ? 'b' : 'a';
+        String tampered = parts[0] + "." + parts[1] + "." + corrupted + sig.substring(1);
 
-        org.junit.jupiter.api.Assertions.assertThrows(
-                io.jsonwebtoken.JwtException.class,
-                () -> jwt.parse(tampered)
-        );
+        assertThatThrownBy(() -> jwt.parse(tampered))
+                .isInstanceOf(JwtException.class);
     }
 
     @Test
