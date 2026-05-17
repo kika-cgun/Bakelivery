@@ -11,6 +11,7 @@ import com.piotrcapecki.bakelivery.messaging.service.MessageService;
 import com.piotrcapecki.bakelivery.messaging.service.ThreadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,6 +48,9 @@ class MessagingControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private ConnectionFactory connectionFactory;
 
     @MockitoBean
     private ThreadService threadService;

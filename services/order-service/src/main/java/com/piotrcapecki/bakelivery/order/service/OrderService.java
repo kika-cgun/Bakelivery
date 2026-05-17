@@ -17,7 +17,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -99,14 +98,13 @@ public class OrderService {
         order.getItems().addAll(items);
         items.forEach(i -> i.setOrder(order));
 
-        Order saved;
-        try {
-            saved = orderRepo.saveAndFlush(order);
-        } catch (DataIntegrityViolationException e) {
-            return orderRepo.findByIdempotencyKey(idempotencyKey)
-                    .map(OrderResponse::of)
-                    .orElseThrow(() -> new IllegalArgumentException("Order conflict"));
+        // Idempotency: check before insert to avoid rollback-only transaction from constraint violation
+        var existing = orderRepo.findByIdempotencyKey(idempotencyKey);
+        if (existing.isPresent()) {
+            return OrderResponse.of(existing.get());
         }
+
+        Order saved = orderRepo.saveAndFlush(order);
 
         final OrderPlacedEvent event = new OrderPlacedEvent(
                 saved.getId(),

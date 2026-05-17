@@ -3,6 +3,7 @@ package com.piotrcapecki.bakelivery.messaging.repository;
 import com.piotrcapecki.bakelivery.messaging.model.Thread;
 import com.piotrcapecki.bakelivery.messaging.model.ThreadStatus;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,9 @@ class ThreadRepositoryTest {
 
     @Autowired
     private ThreadRepository threadRepository;
+
+    @MockitoBean
+    private ConnectionFactory connectionFactory;
 
     @MockitoBean
     private RabbitTemplate rabbitTemplate;

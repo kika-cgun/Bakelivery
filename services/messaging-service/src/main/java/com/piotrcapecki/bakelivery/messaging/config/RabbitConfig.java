@@ -9,7 +9,7 @@ import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -45,6 +45,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", QUEUE_DISPATCH_ASSIGNED + ".dlq")
+                .quorum()
                 .build();
     }
 
@@ -53,17 +54,18 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_DELIVERY_COMPLETED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", QUEUE_DELIVERY_COMPLETED + ".dlq")
+                .quorum()
                 .build();
     }
 
     @Bean
     public Queue dispatchAssignedDlq() {
-        return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED + ".dlq").build();
+        return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED + ".dlq").quorum().build();
     }
 
     @Bean
     public Queue deliveryCompletedDlq() {
-        return QueueBuilder.durable(QUEUE_DELIVERY_COMPLETED + ".dlq").build();
+        return QueueBuilder.durable(QUEUE_DELIVERY_COMPLETED + ".dlq").quorum().build();
     }
 
     @Bean
@@ -89,13 +91,13 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+    public JacksonJsonMessageConverter messageConverter() {
+        return new JacksonJsonMessageConverter();
     }
 
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
-                                          Jackson2JsonMessageConverter messageConverter) {
+                                          JacksonJsonMessageConverter messageConverter) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter);
         return template;
@@ -104,7 +106,7 @@ public class RabbitConfig {
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             ConnectionFactory connectionFactory,
-            Jackson2JsonMessageConverter messageConverter) {
+            JacksonJsonMessageConverter messageConverter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);

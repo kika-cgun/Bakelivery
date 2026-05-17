@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -18,7 +18,7 @@ class RabbitConfigTest {
     @Autowired TopicExchange bakeliveryExchange;
     @Autowired Queue orderPlacedQueue;
     @Autowired Queue orderPlacedDlq;
-    @Autowired Jackson2JsonMessageConverter messageConverter;
+    @Autowired JacksonJsonMessageConverter messageConverter;
     @Autowired RabbitTemplate rabbitTemplate;
 
     @Test
@@ -40,6 +40,6 @@ class RabbitConfigTest {
 
     @Test
     void rabbitTemplateUsesJsonConverter() {
-        assertThat(rabbitTemplate.getMessageConverter()).isInstanceOf(Jackson2JsonMessageConverter.class);
+        assertThat(rabbitTemplate.getMessageConverter()).isInstanceOf(JacksonJsonMessageConverter.class);
     }
 }

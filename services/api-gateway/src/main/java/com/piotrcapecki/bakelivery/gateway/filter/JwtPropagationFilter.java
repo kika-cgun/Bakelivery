@@ -9,6 +9,7 @@ import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import java.util.List;
+import java.util.UUID;
 
 public class JwtPropagationFilter implements HandlerFilterFunction<ServerResponse, ServerResponse> {
 
@@ -34,7 +35,12 @@ public class JwtPropagationFilter implements HandlerFilterFunction<ServerRespons
         String path = request.path();
 
         if (isPublicPath(path)) {
-            return next.handle(request);
+            String reqId = request.headers().firstHeader("X-Request-Id");
+            if (reqId == null || reqId.isBlank()) {
+                reqId = UUID.randomUUID().toString();
+            }
+            ServerRequest withId = ServerRequest.from(request).header("X-Request-Id", reqId).build();
+            return next.handle(withId);
         }
 
         String authHeader = request.headers().firstHeader("Authorization");
@@ -54,7 +60,14 @@ public class JwtPropagationFilter implements HandlerFilterFunction<ServerRespons
                     .build();
         }
 
+        String requestId = request.headers().firstHeader("X-Request-Id");
+        if (requestId == null || requestId.isBlank()) {
+            requestId = UUID.randomUUID().toString();
+        }
+        final String finalRequestId = requestId;
+
         ServerRequest mutated = ServerRequest.from(request)
+                .header("X-Request-Id", finalRequestId)
                 .header("X-User-Id", claims.userId().toString())
                 .header("X-Role", claims.role())
                 .headers(headers -> {

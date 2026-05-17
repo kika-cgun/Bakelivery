@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'bakelivery'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - api-gateway:8080
+          - auth-service:8081
+          - customer-service:8082
+          - catalog-service:8083
+          - order-service:8084
+          - dispatching-service:8085
+          - routing-service:8086
+          - driver-ops-service:8087
+          - messaging-service:8088
+          - maps-service:8089
+          - notification-service:8090
+          - invoice-service:8091
+          - realtime-service:8092

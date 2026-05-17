@@ -3,7 +3,7 @@ package com.piotrcapecki.bakelivery.order.config;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,7 +24,7 @@ class RabbitConfigTest {
     @Autowired Queue ordersInvoiceQueue;
     @Autowired Queue dlqNotification;
     @Autowired Queue dlqInvoice;
-    @Autowired Jackson2JsonMessageConverter messageConverter;
+    @Autowired JacksonJsonMessageConverter messageConverter;
 
     @Test
     void exchangeNameIsCorrect() {
@@ -61,6 +61,6 @@ class RabbitConfigTest {
 
     @Test
     void messageConverterIsJackson() {
-        assertThat(messageConverter).isInstanceOf(Jackson2JsonMessageConverter.class);
+        assertThat(messageConverter).isInstanceOf(JacksonJsonMessageConverter.class);
     }
 }

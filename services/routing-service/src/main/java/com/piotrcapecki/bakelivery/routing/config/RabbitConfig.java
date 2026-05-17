@@ -3,7 +3,7 @@ package com.piotrcapecki.bakelivery.routing.config;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +39,7 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_OPTIMIZE)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_OPTIMIZE)
+                .quorum()
                 .build();
     }
 
@@ -47,14 +48,15 @@ public class RabbitConfig {
         return QueueBuilder.durable(QUEUE_DISPATCH_ASSIGNED)
                 .withArgument("x-dead-letter-exchange", DLX)
                 .withArgument("x-dead-letter-routing-key", DLQ_DISPATCH)
+                .quorum()
                 .build();
     }
 
     @Bean
-    Queue dlqOptimize() { return QueueBuilder.durable(DLQ_OPTIMIZE).build(); }
+    Queue dlqOptimize() { return QueueBuilder.durable(DLQ_OPTIMIZE).quorum().build(); }
 
     @Bean
-    Queue dlqDispatch() { return QueueBuilder.durable(DLQ_DISPATCH).build(); }
+    Queue dlqDispatch() { return QueueBuilder.durable(DLQ_DISPATCH).quorum().build(); }
 
     @Bean
     Binding optimizeBinding(Queue routingOptimizeQueue, DirectExchange routingDirect) {
@@ -67,13 +69,13 @@ public class RabbitConfig {
     }
 
     @Bean
-    Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+    JacksonJsonMessageConverter messageConverter() {
+        return new JacksonJsonMessageConverter();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    RabbitTemplate rabbitTemplate(ConnectionFactory cf, Jackson2JsonMessageConverter converter) {
+    RabbitTemplate rabbitTemplate(ConnectionFactory cf, JacksonJsonMessageConverter converter) {
         var t = new RabbitTemplate(cf);
         t.setMessageConverter(converter);
         t.setMandatory(true);

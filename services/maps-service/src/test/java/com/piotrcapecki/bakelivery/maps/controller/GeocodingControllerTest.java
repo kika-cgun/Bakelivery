@@ -3,6 +3,7 @@ package com.piotrcapecki.bakelivery.maps.controller;
 import com.piotrcapecki.bakelivery.maps.dto.GeocodeResponse;
 import com.piotrcapecki.bakelivery.maps.service.GeocodingService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Tag("integration")
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")

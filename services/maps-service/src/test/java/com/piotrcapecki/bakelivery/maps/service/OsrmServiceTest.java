@@ -19,6 +19,7 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.*;
 
+@Tag("integration")
 @SpringBootTest
 @Testcontainers
 class OsrmServiceTest {
