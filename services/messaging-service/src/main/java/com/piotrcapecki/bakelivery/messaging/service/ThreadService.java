@@ -9,11 +9,15 @@ import com.piotrcapecki.bakelivery.messaging.model.ThreadStatus;
 import com.piotrcapecki.bakelivery.messaging.repository.ThreadRepository;
 import com.piotrcapecki.bakelivery.messaging.security.MessagingPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @Service
 @RequiredArgsConstructor
@@ -23,26 +27,29 @@ public class ThreadService {
 
     @Transactional
     public ThreadResponse create(CreateThreadRequest request, MessagingPrincipal principal) {
-        if (threadRepository.existsByBakeryIdAndOrderId(request.bakeryId(), request.orderId())) {
-            throw new ConflictException("Thread already exists for this bakery and order");
-        }
+        UUID bakeryId = resolveBakeryId(principal, request.bakeryId());
         Thread thread = Thread.builder()
                 .id(UUID.randomUUID())
-                .bakeryId(request.bakeryId())
+                .bakeryId(bakeryId)
                 .orderId(request.orderId())
                 .customerId(principal.userId())
                 .status(ThreadStatus.OPEN)
                 .build();
-        Thread saved = threadRepository.save(thread);
-        return toResponse(saved);
+        try {
+            Thread saved = threadRepository.save(thread);
+            return toResponse(saved);
+        } catch (DataIntegrityViolationException ex) {
+            throw new ConflictException("Thread already exists for this bakery and order");
+        }
     }
 
     @Transactional(readOnly = true)
     public List<ThreadResponse> listForUser(UUID bakeryId, MessagingPrincipal principal) {
+        UUID effectiveBakeryId = resolveBakeryId(principal, bakeryId);
         List<Thread> threads = switch (principal.role()) {
-            case "CUSTOMER" -> threadRepository.findByBakeryIdAndCustomerId(bakeryId, principal.userId());
-            case "DRIVER" -> threadRepository.findByBakeryIdAndDriverId(bakeryId, principal.userId());
-            default -> threadRepository.findByBakeryId(bakeryId);
+            case "CUSTOMER" -> threadRepository.findByBakeryIdAndCustomerId(effectiveBakeryId, principal.userId());
+            case "DRIVER" -> threadRepository.findByBakeryIdAndDriverId(effectiveBakeryId, principal.userId());
+            default -> threadRepository.findByBakeryId(effectiveBakeryId);
         };
         return threads.stream().map(this::toResponse).toList();
     }
@@ -74,6 +81,17 @@ public class ThreadService {
             case "DRIVER" -> principal.userId().equals(thread.getDriverId());
             default -> thread.getBakeryId().equals(principal.bakeryId());
         };
+    }
+
+    private UUID resolveBakeryId(MessagingPrincipal principal, UUID requestBakeryId) {
+        UUID principalBakeryId = principal.bakeryId();
+        if (principalBakeryId == null) {
+            return requestBakeryId;
+        }
+        if (!principalBakeryId.equals(requestBakeryId)) {
+            throw new ResponseStatusException(FORBIDDEN, "No access to this bakery");
+        }
+        return principalBakeryId;
     }
 
     private ThreadResponse toResponse(Thread t) {

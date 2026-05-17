@@ -87,11 +87,7 @@ class RedisRelayIntegrationTest {
             }
         });
 
-        Thread.sleep(200);
-
-        redisTemplate.convertAndSend("messaging.thread." + threadId, payload);
-
-        String message = received.poll(2, TimeUnit.SECONDS);
+        String message = publishUntilReceived(received, "messaging.thread." + threadId, payload);
         assertThat(message).isNotNull();
         assertThat(message).contains(threadId.toString());
 
@@ -128,14 +124,20 @@ class RedisRelayIntegrationTest {
             }
         });
 
-        Thread.sleep(200);
-
-        redisTemplate.convertAndSend("driver.pos." + driverId, payload);
-
-        String message = received.poll(2, TimeUnit.SECONDS);
+        String message = publishUntilReceived(received, "driver.pos." + driverId, payload);
         assertThat(message).isNotNull();
         assertThat(message).contains(driverId.toString());
 
         session.disconnect();
+    }
+
+    private String publishUntilReceived(BlockingQueue<String> received, String channel, String payload)
+            throws InterruptedException {
+        String message = null;
+        for (int attempt = 0; attempt < 10 && message == null; attempt++) {
+            redisTemplate.convertAndSend(channel, payload);
+            message = received.poll(300, TimeUnit.MILLISECONDS);
+        }
+        return message;
     }
 }

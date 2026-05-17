@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -33,7 +34,7 @@ public class MessageService {
         if (!threadService.hasAccess(thread, principal)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to this thread");
         }
-        SenderRole senderRole = SenderRole.valueOf(principal.role());
+        SenderRole senderRole = resolveSenderRole(principal.role());
         Message message = Message.builder()
                 .id(UUID.randomUUID())
                 .bakeryId(thread.getBakeryId())
@@ -63,15 +64,23 @@ public class MessageService {
         if (!threadService.hasAccess(thread, principal)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to this thread");
         }
-        Message message = messageRepository.findById(msgId)
+        Message message = messageRepository.findByIdAndThreadId(msgId, threadId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
         // Only the recipient (someone other than the sender) can mark as read
         if (message.getSenderId().equals(principal.userId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot mark own message as read");
         }
         if (message.getReadAt() == null) {
-            message.setReadAt(LocalDateTime.now());
+            message.setReadAt(OffsetDateTime.now());
             messageRepository.save(message);
+        }
+    }
+
+    private SenderRole resolveSenderRole(String role) {
+        try {
+            return SenderRole.valueOf(role.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unsupported sender role");
         }
     }
 

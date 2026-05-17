@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +82,7 @@ class MessagingControllerTest {
         UUID customerId = UUID.randomUUID();
         CreateThreadRequest request = new CreateThreadRequest(orderId, bakeryId);
         ThreadResponse response = new ThreadResponse(UUID.randomUUID(), orderId, customerId, null,
-                "OPEN", LocalDateTime.now(), LocalDateTime.now());
+                "OPEN", OffsetDateTime.now(), OffsetDateTime.now());
 
         when(threadService.create(any(), any())).thenReturn(response);
 
@@ -131,7 +131,7 @@ class MessagingControllerTest {
         UUID threadId = UUID.randomUUID();
         SendMessageRequest request = new SendMessageRequest("Hello driver!");
         MessageResponse response = new MessageResponse(UUID.randomUUID(), customerId, "CUSTOMER",
-                "Hello driver!", null, LocalDateTime.now());
+                "Hello driver!", null, OffsetDateTime.now());
 
         when(messageService.send(eq(threadId), any(), any())).thenReturn(response);
 

@@ -1,6 +1,6 @@
 package com.piotrcapecki.bakelivery.messaging.dto;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record ThreadResponse(
@@ -9,6 +9,6 @@ public record ThreadResponse(
         UUID customerId,
         UUID driverId,
         String status,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt
 ) {}

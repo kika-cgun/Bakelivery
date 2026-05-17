@@ -8,6 +8,8 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+
 @Service
 @RequiredArgsConstructor
 public class RedisMessageRelay implements MessageListener {
@@ -18,8 +20,8 @@ public class RedisMessageRelay implements MessageListener {
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        String channel = new String(message.getChannel());
-        String body = new String(message.getBody());
+        String channel = new String(message.getChannel(), StandardCharsets.UTF_8);
+        String body = new String(message.getBody(), StandardCharsets.UTF_8);
 
         if (channel.startsWith("driver.pos.")) {
             String driverId = channel.substring("driver.pos.".length());

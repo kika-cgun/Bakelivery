@@ -1,6 +1,6 @@
 package com.piotrcapecki.bakelivery.messaging.dto;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record MessageCreatedEvent(
@@ -10,5 +10,5 @@ public record MessageCreatedEvent(
         UUID senderId,
         String senderRole,
         String content,
-        LocalDateTime createdAt
+        OffsetDateTime createdAt
 ) {}

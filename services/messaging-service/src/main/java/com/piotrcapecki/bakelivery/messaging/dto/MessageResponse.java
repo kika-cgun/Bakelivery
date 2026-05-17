@@ -1,6 +1,6 @@
 package com.piotrcapecki.bakelivery.messaging.dto;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record MessageResponse(
@@ -8,6 +8,6 @@ public record MessageResponse(
         UUID senderId,
         String senderRole,
         String content,
-        LocalDateTime readAt,
-        LocalDateTime createdAt
+        OffsetDateTime readAt,
+        OffsetDateTime createdAt
 ) {}

@@ -122,7 +122,7 @@ class MessageServiceTest {
                 .build();
         when(threadService.getThreadOrThrow(threadId)).thenReturn(thread);
         when(threadService.hasAccess(thread, customerPrincipal)).thenReturn(true);
-        when(messageRepository.findById(msg.getId())).thenReturn(Optional.of(msg));
+        when(messageRepository.findByIdAndThreadId(msg.getId(), threadId)).thenReturn(Optional.of(msg));
 
         assertThatThrownBy(() -> messageService.markRead(threadId, msg.getId(), customerPrincipal))
                 .isInstanceOf(ResponseStatusException.class);

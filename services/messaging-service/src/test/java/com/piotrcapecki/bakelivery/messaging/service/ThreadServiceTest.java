@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,7 +40,6 @@ class ThreadServiceTest {
         MessagingPrincipal principal = new MessagingPrincipal(customerId, "c@test.com", bakeryId, "CUSTOMER");
         CreateThreadRequest request = new CreateThreadRequest(orderId, bakeryId);
 
-        when(threadRepository.existsByBakeryIdAndOrderId(bakeryId, orderId)).thenReturn(false);
         when(threadRepository.save(any(Thread.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ThreadResponse response = threadService.create(request, principal);
@@ -57,7 +57,7 @@ class ThreadServiceTest {
         MessagingPrincipal principal = new MessagingPrincipal(UUID.randomUUID(), "c@test.com", bakeryId, "CUSTOMER");
         CreateThreadRequest request = new CreateThreadRequest(orderId, bakeryId);
 
-        when(threadRepository.existsByBakeryIdAndOrderId(bakeryId, orderId)).thenReturn(true);
+        when(threadRepository.save(any(Thread.class))).thenThrow(new DataIntegrityViolationException("uq_thread_order"));
 
         assertThatThrownBy(() -> threadService.create(request, principal))
                 .isInstanceOf(ConflictException.class);
