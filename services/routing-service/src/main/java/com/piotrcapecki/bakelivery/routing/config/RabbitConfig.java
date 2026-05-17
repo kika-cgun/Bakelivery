@@ -3,7 +3,7 @@ package com.piotrcapecki.bakelivery.routing.config;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,13 +69,13 @@ public class RabbitConfig {
     }
 
     @Bean
-    Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+    JacksonJsonMessageConverter messageConverter() {
+        return new JacksonJsonMessageConverter();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    RabbitTemplate rabbitTemplate(ConnectionFactory cf, Jackson2JsonMessageConverter converter) {
+    RabbitTemplate rabbitTemplate(ConnectionFactory cf, JacksonJsonMessageConverter converter) {
         var t = new RabbitTemplate(cf);
         t.setMessageConverter(converter);
         t.setMandatory(true);
