@@ -35,6 +35,9 @@ public class RouteConfig {
     @Value("${gateway.routes.driver-ops-service.uri:http://localhost:8087}")
     private String driverOpsServiceUri;
 
+    @Value("${gateway.routes.messaging-service.uri:http://localhost:8088}")
+    private String messagingServiceUri;
+
     private final JwtPropagationFilter jwtPropagationFilter;
     private final RateLimitFilter rateLimitFilter;
 
@@ -112,6 +115,17 @@ public class RouteConfig {
                 .path("/api/driver-ops/**", builder -> builder
                         .filter(jwtPropagationFilter)
                         .route(RequestPredicates.all(), HandlerFunctions.http(driverOpsServiceUri))
+                )
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> messagingServiceRoute() {
+        return GatewayRouterFunctions.route("messaging-service")
+                .path("/api/messaging/**", builder -> builder
+                        .filter(jwtPropagationFilter)
+                        .filter(rateLimitFilter)
+                        .route(RequestPredicates.all(), HandlerFunctions.http(messagingServiceUri))
                 )
                 .build();
     }
