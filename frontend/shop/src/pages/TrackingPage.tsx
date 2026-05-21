@@ -1,9 +1,103 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CheckCircle2, Loader2, Bike } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { useOrder } from '@ui/api/orders';
 import { cn, formatPrice, formatDate, orderStatusLabel, orderStatusClass } from '@ui/lib/utils';
-import type { OrderStatus } from '@ui/types';
+import type { OrderStatus, DeliveryAddress } from '@ui/types';
+
+// ─── Leaflet icon fix (Vite bundler) ─────────────────────────────────────────
+
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+const destinationIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:20px;height:20px;background:#b45309;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>`,
+  iconSize:    [20, 20],
+  iconAnchor:  [10, 20],
+});
+
+// ─── Geocoding ───────────────────────────────────────────────────────────────
+
+const WARSAW: [number, number] = [52.2297, 21.0122];
+
+async function geocodeAddress(address: DeliveryAddress): Promise<[number, number] | null> {
+  const query = encodeURIComponent(
+    `${address.street}, ${address.postalCode} ${address.city}, Poland`,
+  );
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'pl' } },
+    );
+    const data = await res.json() as Array<{ lat: string; lon: string }>;
+    if (data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  } catch { /* fall through */ }
+  return null;
+}
+
+// ─── Map recenter helper ──────────────────────────────────────────────────────
+
+function RecenterMap({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => { map.setView(center, 15); }, [map, center]);
+  return null;
+}
+
+// ─── Delivery Map ─────────────────────────────────────────────────────────────
+
+interface DeliveryMapProps {
+  address: DeliveryAddress;
+}
+
+function DeliveryMap({ address }: DeliveryMapProps) {
+  const [coords, setCoords] = useState<[number, number] | null>(null);
+  const [geocoding, setGeocoding] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setGeocoding(true);
+    geocodeAddress(address).then((c) => {
+      if (!cancelled) { setCoords(c); setGeocoding(false); }
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address.street, address.postalCode, address.city]);
+
+  const center: [number, number] = coords ?? WARSAW;
+
+  return (
+    <div className="relative h-44">
+      {geocoding && (
+        <div className="absolute inset-0 z-[500] flex items-center justify-center bg-white/60">
+          <Loader2 size={20} className="animate-spin text-amber-500" />
+        </div>
+      )}
+      <MapContainer
+        center={center}
+        zoom={coords ? 15 : 12}
+        scrollWheelZoom={false}
+        className="h-full w-full"
+        attributionControl={false}
+        zoomControl={false}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {coords && (
+          <>
+            <RecenterMap center={coords} />
+            <Marker position={coords} icon={destinationIcon} />
+          </>
+        )}
+      </MapContainer>
+    </div>
+  );
+}
 
 // ─── Progress Steps ───────────────────────────────────────────────────────────
 
@@ -19,14 +113,6 @@ const STEPS: Step[] = [
   { status: 'DELIVERED', label: 'Dostarczone' },
 ];
 
-const STATUS_ORDER: OrderStatus[] = [
-  'PENDING',
-  'ACCEPTED',
-  'BAKING',
-  'READY_FOR_PICKUP',
-  'IN_DELIVERY',
-  'DELIVERED',
-];
 
 function getStepIndex(status: OrderStatus): number {
   // Map all statuses to the 4-step UI
@@ -103,7 +189,9 @@ function ProgressSteps({ status }: ProgressStepsProps) {
 function DeliveredBanner() {
   return (
     <div className="bg-emerald-50 border border-emerald-200 rounded-[14px] p-5 text-center animate-in fade-in duration-500">
-      <div className="text-5xl mb-2 select-none">🎉</div>
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 mb-3">
+        <CheckCircle2 size={28} strokeWidth={1.75} className="text-emerald-600" />
+      </div>
       <p className="font-display text-xl text-emerald-800 mb-1">Zamówienie dostarczone!</p>
       <p className="text-sm text-emerald-600">Smacznego! Dziękujemy za zamówienie.</p>
     </div>
@@ -200,8 +288,8 @@ export default function TrackingPage() {
           {(order.driverName || order.estimatedDelivery) && (
             <div className="bg-white rounded-[14px] border border-[#FCEAE1] shadow-[0_1px_6px_rgba(0,0,0,.07)] p-4 flex items-center gap-4">
               {/* Avatar placeholder */}
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-yellow-200 flex items-center justify-center flex-none text-xl select-none">
-                🚴
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-yellow-200 flex items-center justify-center flex-none">
+                <Bike size={22} strokeWidth={1.4} className="text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-[#64748B] mb-0.5">Kurier</p>
@@ -216,13 +304,9 @@ export default function TrackingPage() {
             </div>
           )}
 
-          {/* Map placeholder */}
+          {/* Map */}
           <div className="bg-white rounded-[14px] border border-[#FCEAE1] shadow-[0_1px_6px_rgba(0,0,0,.07)] overflow-hidden">
-            <div className="h-44 bg-gradient-to-br from-amber-50 to-green-50 flex flex-col items-center justify-center gap-2">
-              <MapPin size={28} className="text-amber-400" />
-              <p className="text-sm text-[#64748B] font-medium">Podgląd mapy</p>
-              <p className="text-xs text-slate-400 px-6 text-center">Mapa Leaflet dostępna po instalacji paczki react-leaflet</p>
-            </div>
+            <DeliveryMap address={order.address} />
             <div className="px-4 py-2.5 border-t border-[#FCEAE1]">
               <p className="text-xs text-[#64748B] flex items-start gap-1.5">
                 <MapPin size={12} className="mt-0.5 flex-none text-amber-500" />

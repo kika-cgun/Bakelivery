@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react';
 import { OpsLayout } from '@/components/layout/OpsLayout';
 import {
   useProducts,
@@ -369,7 +369,7 @@ export default function CatalogPage() {
         </div>
       ) : !products?.length ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-          <span className="text-4xl mb-3">📦</span>
+          <Package size={36} className="mb-3 opacity-30" />
           <p className="text-sm">Brak produktów w tej kategorii</p>
         </div>
       ) : (

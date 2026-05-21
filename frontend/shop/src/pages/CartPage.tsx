@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, X, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Minus, Plus, X, ShoppingCart, ArrowLeft, Wheat } from 'lucide-react';
 import { cn, formatPrice } from '@ui/lib/utils';
 import { useCartStore } from '@/store/cart';
 import type { CartItem } from '@ui/types';
@@ -22,8 +22,8 @@ function CartItemRow({ item, onIncrease, onDecrease, onRemove }: CartItemRowProp
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[#FCEAE1] last:border-b-0">
       {/* Color swatch placeholder */}
-      <div className="w-12 h-12 rounded-[8px] bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center flex-none text-xl select-none">
-        🍞
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center flex-none">
+        <Wheat size={20} strokeWidth={1.25} className="text-amber-400/70" />
       </div>
 
       {/* Info */}

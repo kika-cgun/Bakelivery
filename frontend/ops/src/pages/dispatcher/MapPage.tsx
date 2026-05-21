@@ -1,9 +1,42 @@
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import { OpsLayout } from '@/components/layout/OpsLayout';
 import { useActiveDrivers } from '@ui/api/driver';
 import { cn } from '@ui/lib/utils';
 import type { DriverLocation } from '@ui/types';
+
+// ─── Leaflet icon fix (Vite bundler) ─────────────────────────────────────────
+
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// ─── Driver marker icons ──────────────────────────────────────────────────────
+
+function makeDriverIcon(busy: boolean) {
+  const bg = busy ? '#6366f1' : '#22c55e';
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        width:32px;height:32px;
+        background:${bg};
+        border-radius:50%;
+        border:3px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,.3);
+        display:flex;align-items:center;justify-content:center;
+      "><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='5.5' cy='17.5' r='3.5'/><circle cx='18.5' cy='17.5' r='3.5'/><circle cx='15' cy='5' r='1'/><path d='M12 17.5V14l-3-3 4-3 2 3h2'/></svg></div>`,
+    iconSize:    [32, 32],
+    iconAnchor:  [16, 16],
+    popupAnchor: [0, -18],
+  });
+}
+
+const WARSAW: [number, number] = [52.2297, 21.0122];
 
 // ─── Filter helpers ──────────────────────────────────────────────────────────
 
@@ -109,17 +142,36 @@ export default function MapPage() {
             <h2 className="text-sm font-semibold text-slate-700">Live mapa kurierów</h2>
             <p className="text-xs text-slate-400">Odświeżanie co 10 sekund</p>
           </div>
-          <div className="flex-1 flex items-center justify-center bg-slate-50/50 p-8">
-            <div className="text-center text-slate-400 max-w-sm">
-              <MapPin size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium mb-1">Mapa Leaflet</p>
-              <p className="text-xs leading-relaxed">
-                Tu wyświetli się interaktywna mapa z live pozycjami kurierów po zainstalowaniu{' '}
-                <span className="font-mono">leaflet</span> oraz{' '}
-                <span className="font-mono">react-leaflet</span>. Każdy aktywny kierowca
-                widoczny jako marker na mapie.
-              </p>
-            </div>
+          <div className="flex-1 min-h-[360px]">
+            <MapContainer
+              center={WARSAW}
+              zoom={12}
+              scrollWheelZoom
+              className="h-full w-full min-h-[360px]"
+              attributionControl={false}
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {drivers.map((driver) => (
+                <Marker
+                  key={driver.driverId}
+                  position={[driver.lat, driver.lng]}
+                  icon={makeDriverIcon(!!driver.orderId)}
+                >
+                  <Popup className="leaflet-popup-driver">
+                    <div className="text-xs leading-snug min-w-[140px]">
+                      <p className="font-semibold text-slate-800 mb-0.5">{driver.driverName}</p>
+                      {driver.orderId ? (
+                        <p className="text-indigo-600 font-mono">
+                          #{driver.orderId.slice(-4).toUpperCase()} · W dostawie
+                        </p>
+                      ) : (
+                        <p className="text-green-600">Wolny</p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
         </div>
 

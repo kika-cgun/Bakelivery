@@ -3,30 +3,47 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --cream:         #FDF6EC;
+    --cream-surface: #FFFCF8;
+    --amber-brand:   #b45309;
+    --text-dark:     #1C1007;
+    --text-muted:    #78614D;
+    --border:        #EDD9B8;
+  }
+
   * { box-sizing: border-box; }
 
   html {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Raleway', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background-color: #FFF7ED;
-    color: #0F172A;
+    background-color: var(--cream);
+    color: var(--text-dark);
     min-height: 100dvh;
+    /* Subtle linen/paper texture */
+    background-image:
+      repeating-linear-gradient(
+        -55deg,
+        transparent,
+        transparent 3px,
+        rgba(180,83,9,0.011) 3px,
+        rgba(180,83,9,0.011) 4px
+      );
   }
 
   :focus-visible {
-    outline: 2px solid #d97706;
+    outline: 2px solid var(--amber-brand);
     outline-offset: 2px;
     border-radius: 4px;
   }
 
-  /* Leaflet override */
   .leaflet-container {
     border-radius: 14px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Raleway', sans-serif;
   }
 }
 

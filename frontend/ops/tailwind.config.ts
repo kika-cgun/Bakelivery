@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         display: ['Calistoga', 'serif'],
-        body:    ['Inter', 'sans-serif'],
+        body:    ['Outfit', 'sans-serif'],
         mono:    ['"JetBrains Mono"', 'monospace'],
       },
       colors: {

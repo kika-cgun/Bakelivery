@@ -289,7 +289,7 @@ export default function CheckoutPage() {
             'w-full h-14 rounded-[14px] font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:outline-none max-w-lg mx-auto',
             isPending || items.length === 0
               ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : 'bg-[#2563eb] hover:bg-blue-700 text-white shadow-[0_4px_14px_rgba(37,99,235,0.30)] active:scale-[0.99]',
+              : 'bg-amber-700 hover:bg-amber-800 text-white shadow-[0_4px_14px_rgba(180,83,9,.35)] active:scale-[0.99]',
           )}
         >
           {isPending ? (

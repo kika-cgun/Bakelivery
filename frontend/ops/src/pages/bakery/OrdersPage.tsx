@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, ClipboardList } from 'lucide-react';
 import { OpsLayout } from '@/components/layout/OpsLayout';
 import { useBakeryOrders, useUpdateOrderStatus } from '@ui/api/orders';
 import { useRealtimeStore } from '@/store/realtime';
@@ -234,7 +234,7 @@ export default function OrdersPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-          <span className="text-4xl mb-3">📋</span>
+          <ClipboardList size={36} className="mb-3 opacity-30" />
           <p className="text-sm">Brak zamówień w tej kategorii</p>
         </div>
       ) : (

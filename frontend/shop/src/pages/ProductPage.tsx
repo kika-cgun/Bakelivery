@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, ShoppingCart, Wheat } from 'lucide-react';
 import { useProduct } from '@ui/api/catalog';
 import { cn, formatPrice } from '@ui/lib/utils';
 import { useCartStore } from '@/store/cart';
@@ -94,7 +94,7 @@ export default function ProductPage() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-8xl select-none drop-shadow-sm">🍞</span>
+              <Wheat size={80} strokeWidth={0.7} className="text-amber-300/50" />
             )}
             {!product.available && (
               <div className="absolute inset-0 bg-white/50 flex items-center justify-center">

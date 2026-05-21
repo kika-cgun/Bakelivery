@@ -16,8 +16,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@ui/*": ["../packages/ui/*"],
-      "@/*":   ["./src/*"]
+      "@ui/*":                  ["../packages/ui/*"],
+      "@/*":                    ["./src/*"],
+      "@tanstack/react-query":  ["./node_modules/@tanstack/react-query"],
+      "clsx":                   ["./node_modules/clsx"],
+      "tailwind-merge":         ["./node_modules/tailwind-merge"],
+      "zustand":                ["./node_modules/zustand"],
+      "zustand/middleware":     ["./node_modules/zustand/middleware"]
     }
   },
   "include": ["src", "../packages/ui"]

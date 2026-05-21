@@ -3,10 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --ops-bg:      #080E1A;
+    --ops-surface: #0f172a;
+    --ops-border:  rgba(148,163,184,0.12);
+    --amber-ops:   #f59e0b;
+  }
+
   * { box-sizing: border-box; }
 
   html {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -25,7 +32,7 @@
 
   .leaflet-container {
     border-radius: 10px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
   }
 }
 

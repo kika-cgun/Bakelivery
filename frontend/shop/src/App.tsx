@@ -15,7 +15,7 @@ const RegisterPage   = lazy(() => import('@/pages/RegisterPage'));
 
 function PageLoader() {
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-[#FFF7ED]">
+    <div className="min-h-dvh flex items-center justify-center bg-[#FDF6EC]">
       <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
     </div>
   );
